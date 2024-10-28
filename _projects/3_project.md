@@ -1,9 +1,8 @@
 ---
 layout: page
-title: project 3 with very long name
-description: a project that redirects to another website
-img: assets/img/7.jpg
-redirect: https://unsplash.com
+title: Reinforcement Learning for Hexapod Robot
+description: CFI
+img: assets/img/project/hexapod.jpg
 importance: 3
 category: work
 ---

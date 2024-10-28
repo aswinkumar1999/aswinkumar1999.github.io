@@ -1,81 +1,27 @@
 ---
 layout: page
-title: project 1
-description: with background image
-img: assets/img/12.jpg
+title: DCT and IDCT Hardware Accelerator
+description:
+img: assets/img/project/IDCT.png
 importance: 1
 category: work
 related_publications: true
 ---
 
-Every project has a beautiful feature showcase page.
-It's easy to include images in a flexible 3-column grid format.
-Make your photos 1/3, 2/3, or full width.
+This project implements a hardware accelerator for Discrete Cosine Transform (DCT) and Inverse Discrete Cosine Transform (IDCT) for signal processing and media applications. 
 
-To give your project a background in the portfolio page, just add the img tag to the front matter like so:
+<div class="row"> <div class="col-sm mt-3 mt-md-0"> {% include figure.liquid loading="eager" path="assets/img/project/dct.png" title="DCT Diagram" class="img-fluid rounded z-depth-1" %} </div> <div class="col-sm mt-3 mt-md-0"> {% include figure.liquid loading="eager" path="assets/img/project/IDCT.png" title="IDCT Diagram" class="img-fluid rounded z-depth-1" %} </div> </div> <div class="caption"> Left: Flow graph of DCT. Right: Flow graph of IDCT. </div>
 
-    ---
-    layout: page
-    title: project
-    description: a project with a background image
-    img: /assets/img/12.jpg
-    ---
+# Project Overview:
 
-<div class="row">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/1.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/3.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/5.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-</div>
-<div class="caption">
-    Caption photos easily. On the left, a road goes through a tunnel. Middle, leaves artistically fall in a hipster photoshoot. Right, in another hipster photoshoot, a lumberjack grasps a handful of pine needles.
-</div>
-<div class="row">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/5.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-</div>
-<div class="caption">
-    This image can also have a caption. It's like magic.
-</div>
+The core of this work is to implement a hardware accelerator for DCT and IDCT, which are crucial in various signal processing and media applications. With the growth of information technology, the need for efficient compression algorithms has become paramount. DCT has been widely used for several decades due to its incredible energy compaction properties.
+This project focuses on implementing hardware-level DCT and IDCT transforms for energy-efficient encoding and decoding. The implementation is done using Bluespec, a high-level hardware description language. 
 
-You can also put regular text between your rows of images, even citations {% cite einstein1950meaning %}.
-Say you wanted to write a bit about your project before you posted the rest of the images.
-You describe how you toiled, sweated, _bled_ for your project, and then... you reveal its glory in the next row of images.
+# Key Features: 
 
-<div class="row justify-content-sm-center">
-    <div class="col-sm-8 mt-3 mt-md-0">
-        {% include figure.liquid path="assets/img/6.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-    <div class="col-sm-4 mt-3 mt-md-0">
-        {% include figure.liquid path="assets/img/11.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-    </div>
-</div>
-<div class="caption">
-    You can also have artistically styled 2/3 + 1/3 images, like these.
-</div>
-
-The code is simple.
-Just wrap your images with `<div class="col-sm">` and place them inside `<div class="row">` (read more about the <a href="https://getbootstrap.com/docs/4.4/layout/grid/">Bootstrap Grid</a> system).
-To make images responsive, add `img-fluid` class to each; for rounded corners and shadows use `rounded` and `z-depth-1` classes.
-Here's the code for the last row of images above:
-
-{% raw %}
-
-```html
-<div class="row justify-content-sm-center">
-  <div class="col-sm-8 mt-3 mt-md-0">
-    {% include figure.liquid path="assets/img/6.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-  </div>
-  <div class="col-sm-4 mt-3 mt-md-0">
-    {% include figure.liquid path="assets/img/11.jpg" title="example image" class="img-fluid rounded z-depth-1" %}
-  </div>
-</div>
-```
-
-{% endraw %}
+- Implementation of Fast DCT algorithm
+- Implementation of IDCT algorithm
+- Modular design for 4-point, 8-point, 16-point, and 32-point transforms
+- Use of Butterfly and Hadamard modules for efficient computation
+- Pipelined architecture for higher throughput
+- The project demonstrates the potential for hardware acceleration in signal processing tasks, particularly in the context of media compression and decompression. It provides a foundation for further optimization and integration into larger systems dealing with video and image processing.
