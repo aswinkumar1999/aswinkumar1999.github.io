@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://aswinkumar1999.github.io/sitemap.xml
+Sitemap: https://aswinkumar.me/sitemap.xml
