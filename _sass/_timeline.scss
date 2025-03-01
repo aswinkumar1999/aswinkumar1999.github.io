@@ -1,0 +1,682 @@
+// Project Timeline Styling
+
+.timeline-container {
+  position: relative;
+  width: 100%;
+  padding: 2rem 0;
+  margin-top: 2rem;
+  min-height: 100vh; /* Full viewport height to ensure enough space */
+  overflow: visible; /* Ensure timeline bar isn't clipped */
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 0; /* Remove bottom padding to prevent extra scroll space */
+  z-index: 1; /* Ensure proper layering with the filter */
+}
+
+// Organization header that appears when scrolling through a section
+.org-header-floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0.6rem 2rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.2rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  
+  &.visible {
+    transform: translateY(0);
+  }
+  
+  html[data-theme="dark"] & {
+    background-color: rgba(25, 25, 25, 0.9);
+  }
+}
+
+// Timeline filter navigation - Apple-style design
+.timeline-filter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.8rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 2000; /* Higher than timeline elements */
+  
+  // Apple-style container for buttons
+  .filter-container {
+    display: flex;
+    background-color: rgba(var(--global-theme-color-rgb), 0.1);
+    border-radius: 30px;
+    padding: 6px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+  
+  // Animated background pill
+  .filter-slider {
+    position: absolute;
+    left: calc(33.33% - 3px); // Default to middle position
+    top: 6px;
+    height: calc(100% - 12px);
+    width: calc(33.33% - 6px);
+    background-color: var(--global-bg-color);
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 0;
+  }
+  
+  .filter-btn {
+    background: transparent;
+    border: none;
+    color: var(--global-text-color);
+    padding: 0.6rem 1rem;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    
+    &:hover {
+      color: var(--global-theme-color);
+    }
+    
+    &.active {
+      color: var(--global-theme-color);
+      font-weight: 600;
+    }
+  }
+  
+  .timeline-time-info {
+    margin-left: 1rem;
+    font-size: 0.85rem;
+    color: var(--global-text-color-light);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    
+    i {
+      margin-right: 0.5rem;
+      color: var(--global-theme-color);
+    }
+  }
+}
+
+// Timeline container
+// Timeline line styling - the actual timeline is created dynamically with JavaScript
+.timeline-line {
+  position: absolute !important;
+  background-color: rgba(128, 128, 128, 0.7) !important; /* Darker grey color for better visibility */
+  border-radius: 10px !important; /* More rounded edges */
+  z-index: 999 !important; /* Very high z-index to ensure visibility */
+  pointer-events: none !important;
+  box-shadow: 0 0 10px rgba(128, 128, 128, 0.5) !important; /* Stronger glow */
+  display: block !important; /* Force display */
+  width: 14px !important; /* Narrower for better proportions */
+  opacity: 1 !important;
+  height: 100% !important;
+  min-height: 500px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Timeline scroll indicator/capsule */
+.timeline-indicator {
+  position: absolute !important;
+  width: 18px !important; /* Wider than the bar */
+  height: 30px !important; /* Taller capsule height */
+  background-color: #FFFFFF !important; /* Always white */
+  border-radius: 12px !important; /* More rounded */
+  z-index: 1001 !important; /* Higher z-index to be above the timeline */
+  transform: translateX(-50%) !important;
+  transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; /* Bouncy effect */
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.9) !important; /* Stronger white glow */
+  display: block !important;
+  left: 50% !important; /* Center within parent container */
+  border: 2px solid #FFFFFF !important; /* Always white border */
+  pointer-events: none !important; /* Prevent interference with clicking elements behind it */
+}
+
+/* Organization timeline bars */
+.timeline-org-bar {
+  display: block !important;
+  opacity: 1 !important;
+  height: 3000px !important;
+  min-height: 100vh !important;
+  width: 16px !important; /* Slightly wider for better visibility */
+  z-index: 1 !important; /* Very low z-index to be behind everything */
+}
+
+/* Removed white overlay - we'll handle this with JavaScript instead */
+
+/* Nothing to see here */
+
+// Timeline entries container
+.timeline-entries {
+  position: relative;
+  margin: 0 auto;
+  display: block;
+  width: 100%;
+  z-index: 2; /* Lower z-index than the timeline line */
+  padding-bottom: 50vh; /* Add bottom padding to ensure last item can be centered without scrolling past it */
+  margin-bottom: -50vh; /* Negative margin to counteract the padding for visual layout */
+}
+
+// Organization transitions removed to simplify layout
+
+// Individual timeline entry
+.timeline-entry {
+  position: relative;
+  margin-bottom: 0.8rem; /* Reduced vertical spacing */
+  width: 47%; /* Original width */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 0.75; /* Original opacity */
+  transform: scale(0.95); /* Original scale effect */
+  display: block;
+  box-sizing: border-box;
+  clear: both;
+  will-change: transform, opacity; /* Optimize for animations */
+  scroll-snap-align: center; /* Center this element in the viewport when snapping */
+  scroll-margin: 50vh; /* Creates space around the snap point */
+  --org-color: var(--global-theme-color); /* Default organization color if not set */
+  
+  // Staggered entrance animation on page load
+  animation: timelineEntryFadeIn 0.5s ease backwards;
+  
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) {
+      animation-delay: 0.1s * $i;
+    }
+  }
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 10;
+    
+    .timeline-dot {
+      background-color: var(--org-color, var(--global-theme-color));
+      height: 3px; /* Slightly thicker when active */
+      box-shadow: 0 0 8px var(--org-color, var(--global-theme-color));
+      
+      &::before {
+        background-color: var(--org-color, var(--global-theme-color));
+        height: 3px;
+      }
+    }
+    
+    .timeline-card {
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      border-color: var(--org-color, var(--global-theme-color));
+    }
+    
+    // Enhanced hover effect for card
+    .timeline-card-link {
+      .timeline-title {
+        color: var(--org-color, var(--global-theme-color));
+      }
+    }
+  }
+  
+  // Active state - simplified without detail panels
+  &.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 20; // Higher z-index than hover
+    transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    
+    .timeline-dot {
+      background-color: var(--org-color, var(--global-theme-color));
+      height: 3px; /* Slightly thicker when active */
+      box-shadow: 0 0 8px var(--org-color, var(--global-theme-color));
+      
+      &::before {
+        background-color: var(--org-color, var(--global-theme-color));
+        height: 3px;
+      }
+    }
+    
+    .timeline-card {
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      border-color: var(--org-color, var(--global-theme-color));
+      
+      &::before {
+        opacity: 0.07; /* Slightly more visible when active */
+      }
+      
+      .timeline-img {
+        img {
+          transform: scale(1.05);
+        }
+      }
+    }
+  }
+}
+
+@keyframes timelineEntryFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 0.75;
+    transform: scale(0.95) translateY(0);
+  }
+}
+
+// Position entries on left/right of the timeline
+.timeline-entry.left {
+  float: left;
+  padding-right: 2rem; /* Original padding */
+  
+  .timeline-card {
+    border-radius: 0.5rem 1.5rem 0.5rem 0.5rem; /* Original border radius */
+  }
+}
+
+.timeline-entry.right {
+  float: right;
+  padding-left: 2rem; /* Original padding */
+  
+  .timeline-card {
+    border-radius: 1.5rem 0.5rem 0.5rem 0.5rem; /* Original border radius */
+  }
+}
+
+// Timeline connecting line
+.timeline-dot {
+  position: absolute;
+  top: 50%; /* Initial position - will be overridden by JavaScript */
+  transform: translateY(-50%); /* Center it precisely */
+  height: 2px; /* Thin line */
+  background-color: rgba(128, 128, 128, 0.6); /* Slightly darker for better visibility */
+  z-index: 2;
+  transition: all 0.3s ease;
+  cursor: pointer; /* Show pointer cursor */
+  /* Organization color will be used instead of global theme color when provided */
+  
+  /* Pseudo-element to create card connection */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 12px; /* Match card border radius */
+    background-color: inherit;
+    border-radius: inherit;
+  }
+}
+
+.timeline-entry.left .timeline-dot {
+  right: -8px; /* Position from right edge of entry */
+  width: 24px; /* Width of connecting line */
+  top: 50%; /* Center vertically */
+  transform: translateY(-50%); /* Ensure exact centering */
+  
+  &::before {
+    right: 0; /* Attach to the right side of the line */
+    left: auto;
+  }
+}
+
+.timeline-entry.right .timeline-dot {
+  left: -8px; /* Position from left edge of entry */
+  width: 24px; /* Width of connecting line */
+  top: 50%; /* Center vertically */
+  transform: translateY(-50%); /* Ensure exact centering */
+  
+  &::before {
+    left: 0; /* Attach to the left side of the line */
+    right: auto;
+  }
+}
+
+// Card link wrapper
+.timeline-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  
+  &:hover {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+// Timeline card
+.timeline-card {
+  background-color: var(--global-bg-color);
+  border: 1px solid var(--global-divider-color);
+  border-radius: 0.5rem;
+  padding: 0.9rem 0.9rem 0.7rem 0.9rem; /* Slightly reduced bottom padding */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); /* Original shadow */
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  height: auto; /* Let height adjust to content */
+  min-height: unset; /* Let content determine height */
+  overflow: hidden;
+  cursor: pointer; /* Show pointer cursor to indicate clickable */
+  position: relative;
+  
+  /* Subtle background tint based on organization color */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--org-color);
+    opacity: 0.03; /* Very subtle tint */
+    z-index: 0;
+  }
+  
+  // Content container for text
+  .timeline-content-container {
+    width: 100%;
+    position: relative;
+    z-index: 1; /* Position above the background tint */
+  }
+  
+  // Organization label inside card
+  .timeline-organization {
+    position: absolute;
+    bottom: 0.6rem;
+    right: 0.8rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  // Media container (hidden by default, shown when expanded)
+  .timeline-media-container {
+    display: none; // Initially hidden
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  
+  .timeline-date {
+    font-size: 0.75rem; /* Slightly larger font for better readability */
+    font-weight: 600; /* Bolder for organization name */
+    color: var(--org-color, var(--global-theme-color));
+    margin-bottom: 0.3rem; /* Slightly increased margin */
+    letter-spacing: 0.2px;
+    display: inline-block;
+    line-height: 1.3;
+  }
+  
+  .timeline-title {
+    font-size: 1.2rem; /* Original size */
+    margin-bottom: 0.4rem; /* Slightly reduced margin */
+    position: relative;
+    display: block;
+    font-weight: 600;
+    word-wrap: break-word; /* Allow long titles to wrap properly */
+    padding-right: 0; /* No padding needed without category tags */
+  }
+  
+  .timeline-title::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background-color: var(--org-color, var(--global-theme-color));
+  }
+  
+  .timeline-img {
+    margin-bottom: 0.5rem; /* Original margin */
+    border-radius: 0.3rem;
+    overflow: hidden;
+    max-height: 180px; /* Increased height for larger images */
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    &.collapsed-only {
+      // This image only shows in collapsed view
+      transition: opacity 0.3s ease;
+    }
+  }
+  
+  &:hover .timeline-img img {
+    transform: scale(1.05);
+  }
+  
+  .timeline-desc {
+    color: var(--global-text-color);
+    font-size: 0.85rem; /* Original font size */
+    line-height: 1.4; /* Original line height */
+    padding-right: 0; /* No padding needed without category tags */
+    margin-bottom: 0; /* Original margin */
+  }
+  
+  .timeline-links {
+    margin-top: 0.3rem; /* Reduced margin to save vertical space */
+    display: flex;
+    align-items: center;
+    
+    a.github-link {
+      margin-right: 0;
+      color: var(--global-theme-color);
+      transition: all 0.2s ease;
+      font-size: 0.85rem; /* Original font size */
+      z-index: 5; /* Ensure it's above the card link */
+      position: relative; /* Needed for z-index to work */
+      
+      &:hover {
+        color: var(--global-hover-color);
+      }
+    }
+  }
+  
+  /* Category styling only for the filter buttons - removed from tiles */
+}
+
+// Detail content styling - removed
+// We're no longer using detail panels
+
+// Year markers - completely hidden
+.timeline-year-marker {
+  display: none !important; /* Force hide all year markers */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--global-bg-color);
+  color: var(--global-theme-color);
+  padding: 0.4rem 0.9rem;
+  border-radius: 18px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  z-index: 3;
+  border: 2px solid var(--global-theme-color);
+  margin-top: 1rem;
+  margin-bottom: 1.2rem;
+  clear: both;
+  transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .timeline-container {
+    overflow-x: hidden;
+  }
+
+  .timeline-line {
+    left: 20px;
+    width: 6px;
+    height: 3000px; /* Even longer on mobile */
+  }
+  
+  .timeline-indicator {
+    left: 20px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .timeline-entry {
+    width: 85%;
+    padding-left: 3.5rem !important; /* Increased for longer connecting line */
+    padding-right: 1rem !important;
+    float: none !important;
+    margin-left: auto;
+    margin-right: 0;
+    
+    // Active expanded state on mobile
+    &.active {
+      width: 90%; // Almost full width
+      
+      // Position detail panel differently on mobile - below the card
+      .detail-panel {
+        width: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        position: relative !important;
+        margin-top: 2rem !important;
+        margin-bottom: 2rem !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding: 0 1rem !important; 
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        
+        // Reposition indicator for mobile
+        &::before {
+          left: 0 !important;
+          right: auto !important;
+          height: 4px !important;
+          width: 40px !important;
+          top: -10px !important;
+        }
+        
+        // Less indent on mobile
+        .detail-content {
+          padding-left: 0 !important;
+        }
+      }
+      
+      &.snapped .detail-panel {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+  
+  /* Removed the after pseudo-elements */
+  
+  .timeline-dot {
+    left: -15px !important;
+    right: auto !important;
+    width: 40px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    
+    &::before {
+      left: 0 !important;
+      right: auto !important;
+    }
+  }
+  
+  .timeline-year-marker {
+    left: 20px;
+    transform: none;
+    margin-bottom: 2rem;
+  }
+  
+  // Force clear the alternating pattern on mobile
+  .timeline-entry.left .timeline-card,
+  .timeline-entry.right .timeline-card {
+    border-radius: 0.5rem;
+  }
+  
+  // Adjust filter buttons on mobile
+  .timeline-filter {
+    max-width: 100%;
+    padding: 0 1rem;
+    
+    .filter-container {
+      width: 100%;
+    }
+    
+    .filter-btn {
+      padding: 0.4rem 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .filter-slider {
+      width: calc(33.33% - 8px);
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+// Add pulse animation to active connecting line
+.timeline-entry.active .timeline-dot {
+  animation: lineGlow 2s infinite;
+  background-color: var(--global-theme-color);
+  height: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  
+  &::before {
+    background-color: var(--global-theme-color);
+    height: 3px;
+  }
+}
+
+@keyframes lineGlow {
+  0% {
+    box-shadow: 0 0 3px var(--global-theme-color);
+  }
+  50% {
+    box-shadow: 0 0 12px var(--global-theme-color);
+  }
+  100% {
+    box-shadow: 0 0 3px var(--global-theme-color);
+  }
+}
+
+// Define global theme RGB variable since we can't use color.channel
+:root {
+  --global-theme-color-rgb: 142, 80, 186; /* Default purple in RGB */
+}
+
+html[data-theme="dark"] {
+  --global-theme-color-rgb: 102, 204, 204; /* Cyan in RGB */
+}
