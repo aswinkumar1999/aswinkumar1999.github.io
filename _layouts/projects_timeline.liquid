@@ -22,7 +22,7 @@ layout: default
         </div>
       </div>
       
-      <!-- Simple timeline bar in the center -->
+      <!-- Timeline bar - positioned in center on desktop, left on mobile -->
       <div id="timeline-bar" style="position: absolute; left: 50%; transform: translateX(-50%); width: 14px; background-color: #696969; border-radius: 10px; z-index: 500;">
         <!-- White capsule indicator that moves along the timeline -->
         <div id="timeline-indicator" style="position: absolute; left: 50%; transform: translateX(-50%); width: 12px; height: 22px; background-color: #FFFFFF; border-radius: 10px; z-index: 9999; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); border: 1px solid #FFFFFF; pointer-events: none;"></div>
@@ -117,6 +117,9 @@ layout: default
         // Get the dots for first and last entries
         const firstDot = firstEntry.querySelector('.timeline-dot');
         const lastDot = lastEntry.querySelector('.timeline-dot');
+        
+        // Check if we're on mobile
+        const isMobile = window.innerWidth <= 768;
         
         if (firstDot && lastDot) {
           // Calculate the relative position within timeline container
@@ -319,6 +322,7 @@ layout: default
       const viewportCenter = viewportHeight / 2;
       const timelineRect = timelineBar.getBoundingClientRect();
       const containerRect = document.querySelector('.timeline-container').getBoundingClientRect();
+      const isMobile = window.innerWidth <= 768;
       
       // Calculate normalized scroll position relative to timeline bar
       const scrollPercentage = Math.max(0, Math.min(1, (viewportCenter - timelineRect.top) / timelineRect.height));
@@ -370,7 +374,7 @@ layout: default
           isScrolling = false;
           
           // Get closest project for snapping when scroll ends
-          if (closestDistance < 120) { // A bit more distance threshold for snapping
+          if (closestDistance < 150) { // Increased distance threshold for snapping
             const closestRect = closestEntry.getBoundingClientRect();
             
             // Find the dot (connection to timeline) for this entry
@@ -424,6 +428,32 @@ layout: default
     
     // When everything's loaded, position the timeline and connecting dots
     window.addEventListener('load', function() {
+      // Check for mobile and update the layout if needed
+      const checkMobile = function() {
+        const isMobile = window.innerWidth <= 768;
+        
+        // Update timeline bar based on viewport
+        if (isMobile) {
+          // Mobile: move timeline bar to the left
+          timelineBar.style.left = '20px';
+          timelineBar.style.transform = 'none';
+          timelineIndicator.style.left = '50%';
+          timelineIndicator.style.transform = 'translateX(-50%)';
+        } else {
+          // Desktop: center timeline bar
+          timelineBar.style.left = '50%';
+          timelineBar.style.transform = 'translateX(-50%)';
+          timelineIndicator.style.left = '50%';
+          timelineIndicator.style.transform = 'translateX(-50%)';
+        }
+      };
+      
+      // Call immediately
+      checkMobile();
+      
+      // Also call on resize
+      window.addEventListener('resize', checkMobile);
+      
       positionTimelineBar();
       // Force a scroll event to position the indicator
       window.dispatchEvent(new Event('scroll'));
