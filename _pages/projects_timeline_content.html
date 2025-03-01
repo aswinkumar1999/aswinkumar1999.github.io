@@ -1,89 +1,76 @@
----
-layout: default
----
-<!-- Project Timeline Layout -->
-<div class="post">
-  <header class="post-header">
-    <h1 class="post-title">{{ page.title }}</h1>
-    <p class="post-description">{{ page.description }}</p>
-  </header>
-
-  <article>
-    {{ content }}
-    
-    <div class="timeline-container">
-      <!-- Filter buttons with Apple style -->
-      <div class="timeline-filter">
-        <div class="filter-container">
-          <div class="filter-slider"></div>
-          <button class="filter-btn" data-filter="software">Software</button>
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="hardware">Hardware</button>
-        </div>
-      </div>
-      
-      <!-- Timeline bar - positioned in center on desktop, left on mobile -->
-      <div id="timeline-bar" style="position: absolute; left: 50%; transform: translateX(-50%); width: 14px; background-color: #696969; border-radius: 10px; z-index: 500;">
-        <!-- White capsule indicator that moves along the timeline -->
-        <div id="timeline-indicator" style="position: absolute; left: 50%; transform: translateX(-50%); width: 12px; height: 22px; background-color: #FFFFFF; border-radius: 10px; z-index: 9999; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); border: 1px solid #FFFFFF; pointer-events: none;"></div>
-      </div>
-      
-      <!-- Timeline entries -->
-      <div class="timeline-entries">
-        
-        <!-- Projects in timeline -->
-        {% assign sorted_projects = site.projects | sort: "date" | reverse %}
-        {% assign global_index = 0 %}
-        
-        {% for project in sorted_projects %}
-          {% assign is_left = global_index | modulo: 2 %}
-          {% assign global_index = global_index | plus: 1 %}
-          
-          <!-- Timeline entry -->
-          <div class="timeline-entry {% if is_left == 0 %}left{% else %}right{% endif %}" 
-               data-category="{{ project.category | default: 'other' }}"
-               {% if project.org_color %}style="--org-color: {{ project.org_color }};"{% endif %}>
-            <!-- Connecting dot to timeline - inline style for direct control -->
-            <div class="timeline-dot"></div>
-            <!-- Project card -->
-            <a href="{{ project.url | relative_url }}" class="timeline-card-link">
-              <div class="timeline-card">
-                <div class="timeline-content">
-                  {% if project.date %}
-                    <div class="timeline-date">
-                      {% if project.organization %}{{ project.organization }} - {% endif %}{{ project.date | date: "%B %Y" }}
-                    </div>
-                  {% endif %}
-                  
-                  <h3 class="timeline-title">{{ project.title }}</h3>
-                  
-                  {% if project.img %}
-                    <div class="timeline-img">
-                      {% include figure.liquid loading="eager" path=project.img alt="project thumbnail" %}
-                    </div>
-                  {% endif %}
-                  
-                  <div class="timeline-desc">{{ project.description }}</div>
-                  
-                  {% if project.github %}
-                    <div class="timeline-links">
-                      <a href="{{ project.github }}" target="_blank" class="github-link" onclick="event.stopPropagation();" style="color: var(--org-color, var(--global-theme-color));">
-                        <i class="fa-brands fa-github"></i> <span style="color: var(--org-color, var(--global-theme-color));">Code</span>
-                      </a>
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
-            </a>
-          </div>
-        {% endfor %}
-      </div>
+<!-- Timeline Content included in projects.md -->
+<div class="timeline-container">
+  <!-- Filter buttons with Apple style -->
+  <div class="timeline-filter">
+    <div class="filter-container">
+      <div class="filter-slider"></div>
+      <button class="filter-btn" data-filter="software">Software</button>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="hardware">Hardware</button>
     </div>
-    <!-- Add blank space after timeline -->
-    <div style="height: 50vh; width: 100%; clear: both;"></div>
-  </article>
+  </div>
+  
+  <!-- Timeline bar - positioned in center on desktop, left on mobile -->
+  <div id="timeline-bar" style="position: absolute; left: 50%; transform: translateX(-50%); width: 14px; background-color: #696969; border-radius: 10px; z-index: 500;">
+    <!-- White capsule indicator that moves along the timeline -->
+    <div id="timeline-indicator" style="position: absolute; left: 50%; transform: translateX(-50%); width: 12px; height: 22px; background-color: #FFFFFF; border-radius: 10px; z-index: 9999; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); border: 1px solid #FFFFFF; pointer-events: none;"></div>
+  </div>
+  
+  <!-- Timeline entries -->
+  <div class="timeline-entries">
+    
+    <!-- Projects in timeline -->
+    {% assign sorted_projects = site.projects | sort: "date" | reverse %}
+    {% assign global_index = 0 %}
+    
+    {% for project in sorted_projects %}
+      {% assign is_left = global_index | modulo: 2 %}
+      {% assign global_index = global_index | plus: 1 %}
+      
+      <!-- Timeline entry -->
+      <div class="timeline-entry {% if is_left == 0 %}left{% else %}right{% endif %}" 
+           data-category="{{ project.category | default: 'other' }}"
+           {% if project.org_color %}style="--org-color: {{ project.org_color }};"{% endif %}>
+        <!-- Connecting dot to timeline - inline style for direct control -->
+        <div class="timeline-dot"></div>
+        <!-- Project card -->
+        <a href="{{ project.url | relative_url }}" class="timeline-card-link">
+          <div class="timeline-card">
+            <div class="timeline-content">
+              {% if project.date %}
+                <div class="timeline-date">
+                  {% if project.organization %}{{ project.organization }} - {% endif %}{{ project.date | date: "%B %Y" }}
+                </div>
+              {% endif %}
+              
+              <h3 class="timeline-title">{{ project.title }}</h3>
+              
+              {% if project.img %}
+                <div class="timeline-img">
+                  {% include figure.liquid loading="eager" path=project.img alt="project thumbnail" %}
+                </div>
+              {% endif %}
+              
+              <div class="timeline-desc">{{ project.description }}</div>
+              
+              {% if project.github %}
+                <div class="timeline-links">
+                  <a href="{{ project.github }}" target="_blank" class="github-link" onclick="event.stopPropagation();" style="color: var(--org-color, var(--global-theme-color));">
+                    <i class="fa-brands fa-github"></i> <span style="color: var(--org-color, var(--global-theme-color));">Code</span>
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
 </div>
+<!-- Add blank space after timeline (reduced by half) -->
+<div style="height: 25vh; width: 100%; clear: both;"></div>
 
+<!-- Timeline JavaScript -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Get key elements
