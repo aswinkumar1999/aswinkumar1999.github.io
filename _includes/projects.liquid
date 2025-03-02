@@ -1,5 +1,5 @@
 <div class="col">
-  <a href="{% if project.redirect %}{{ project.redirect }}{% else %}{{ project.url | relative_url }}{% endif %}">
+  <div class="grid-card-wrapper" data-project-id="{{ project.title | slugify }}" onclick="openProjectModal(this)">
     <div class="card h-100 hoverable grid-card">
       {% if project.img %}
         {%
@@ -23,7 +23,7 @@
           {% if project.github %}
             <div class="github-icon">
               <div class="icon" data-toggle="tooltip" title="Code Repository">
-                <a href="{{ project.github }}"><i class="fa-brands fa-github gh-icon"></i></a>
+                <a href="{{ project.github }}" onclick="event.stopPropagation();"><i class="fa-brands fa-github gh-icon"></i></a>
               </div>
               {% if project.github_stars %}
                 <span class="stars" data-toggle="tooltip" title="GitHub Stars">
@@ -36,5 +36,39 @@
         </div>
       </div>
     </div>
-  </a>
+  </div>
+  
+  <!-- Hidden project content for modal -->
+  <div id="modal-content-{{ project.title | slugify }}" style="display: none;">
+    <div class="modal-header" {% if project.org_color %}style="border-color: {{ project.org_color }};"{% endif %}>
+      <h2>{{ project.title }}</h2>
+      {% if project.organization %}
+        <div class="modal-org" {% if project.org_color %}style="color: {{ project.org_color }};"{% endif %}>
+          {{ project.organization }} - {{ project.date | date: "%B %Y" }}
+        </div>
+      {% endif %}
+    </div>
+    
+    {% if project.img %}
+      <div class="modal-img">
+        {% include figure.liquid loading="eager" path=project.img alt="project thumbnail" %}
+      </div>
+    {% endif %}
+    
+    <div class="modal-description">
+      <p>{{ project.description }}</p>
+      
+      {% if project.github %}
+        <div class="modal-links">
+          <a href="{{ project.github }}" target="_blank" class="github-link" {% if project.org_color %}style="color: {{ project.org_color }};"{% endif %}>
+            <i class="fa-brands fa-github"></i> View Code
+          </a>
+        </div>
+      {% endif %}
+      
+      <div class="modal-content">
+        {{ project.content }}
+      </div>
+    </div>
+  </div>
 </div>

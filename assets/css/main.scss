@@ -6,6 +6,12 @@
 // Dimensions
 $max-content-width: {{ site.max_width }};
 
+// Global text selection styling
+::selection {
+  background: var(--global-theme-color);
+  color: var(--global-bg-color);
+}
+
 @import
   "variables",
   "themes",
@@ -15,6 +21,7 @@ $max-content-width: {{ site.max_width }};
   "cv",
   "tabs",
   "typograms",
+  "timeline",
   "font-awesome/fontawesome",
   "font-awesome/brands",
   "font-awesome/solid",

@@ -34,7 +34,7 @@
         <!-- Connecting dot to timeline - inline style for direct control -->
         <div class="timeline-dot"></div>
         <!-- Project card -->
-        <a href="{{ project.url | relative_url }}" class="timeline-card-link">
+        <div class="timeline-card-link" data-project-id="{{ project.title | slugify }}" onclick="openProjectModal(this)">
           <div class="timeline-card">
             <div class="timeline-content">
               {% if project.date %}
@@ -62,7 +62,41 @@
               {% endif %}
             </div>
           </div>
-        </a>
+        </div>
+        
+        <!-- Hidden project content for modal -->
+        <div id="modal-content-{{ project.title | slugify }}" style="display: none;">
+          <div class="modal-header" {% if project.org_color %}style="border-color: {{ project.org_color }};"{% endif %}>
+            <h2>{{ project.title }}</h2>
+            {% if project.organization %}
+              <div class="modal-org" {% if project.org_color %}style="color: {{ project.org_color }};"{% endif %}>
+                {{ project.organization }} - {{ project.date | date: "%B %Y" }}
+              </div>
+            {% endif %}
+          </div>
+          
+          {% if project.img %}
+            <div class="modal-img">
+              {% include figure.liquid loading="eager" path=project.img alt="project thumbnail" %}
+            </div>
+          {% endif %}
+          
+          <div class="modal-description">
+            <p>{{ project.description }}</p>
+            
+            {% if project.github %}
+              <div class="modal-links">
+                <a href="{{ project.github }}" target="_blank" class="github-link" {% if project.org_color %}style="color: {{ project.org_color }};"{% endif %}>
+                  <i class="fa-brands fa-github"></i> View Code
+                </a>
+              </div>
+            {% endif %}
+            
+            <div class="modal-content">
+              {{ project.content }}
+            </div>
+          </div>
+        </div>
       </div>
     {% endfor %}
   </div>

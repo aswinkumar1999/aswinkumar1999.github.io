@@ -11,7 +11,7 @@ horizontal: false
 
 <!-- Project Introduction -->
 <div class="project-intro">
-  <p>This page showcases my journey through various projects. The timeline view presents projects chronologically with a central navigation bar, while the grid view organizes projects by organization. Navigate using arrow keys or WASD (↑/W and ↓/S to move between projects, ←/A and →/D to switch views).</p>
+  <p>This page showcases my journey through various projects. The timeline view presents projects chronologically with a central navigation bar, while the grid view organizes projects by organization. Navigate using arrow keys or WASD (↑/W and ↓/S to move between projects, ←/A and →/D to switch views). Click any project to view details in a modal window.</p>
 </div>
 
 <!-- View Switcher with same style as timeline filters -->
@@ -120,8 +120,96 @@ horizontal: false
   </div>
 </div>
 
+<!-- Project Modal Container -->
+<div class="project-modal-backdrop" id="project-modal-backdrop" onclick="closeProjectModalFromBackdrop(event)">
+  <div class="project-modal" id="project-modal">
+    <div id="modal-content-container"></div>
+  </div>
+</div>
+
+
 <!-- View Switcher Script -->
 <script>
+  // Project Modal Functions
+  function openProjectModal(element) {
+    const projectId = element.getAttribute('data-project-id');
+    const modalContent = document.getElementById(`modal-content-${projectId}`);
+    const modalContainer = document.getElementById('modal-content-container');
+    const modal = document.getElementById('project-modal');
+    const backdrop = document.getElementById('project-modal-backdrop');
+    
+    if (modalContent && modalContainer) {
+      // Reset the scroll position of the modal
+      if (modal) {
+        modal.scrollTop = 0;
+        
+        // Also ensure scroll is reset after the animation starts
+        setTimeout(() => {
+          modal.scrollTop = 0;
+        }, 10);
+      }
+      
+      // Clone the content to the modal
+      const contentHtml = modalContent.innerHTML;
+      
+      // Add close button to the header section in the HTML
+      const headerRegex = /<div class="modal-header"([^>]*)>/;
+      const headerWithCloseButton = '<div class="modal-header"$1><button class="modal-close" onclick="closeProjectModal()">×</button>';
+      const modifiedContent = contentHtml.replace(headerRegex, headerWithCloseButton);
+      
+      // Add the HTML to the modal
+      modalContainer.innerHTML = modifiedContent;
+      
+      // Show modal with animation
+      backdrop.style.display = 'flex';
+      setTimeout(() => {
+        backdrop.classList.add('visible');
+        modal.classList.add('visible');
+      }, 10);
+      
+      // Prevent scrolling on the body
+      document.body.style.overflow = 'hidden';
+      
+      // Handle escape key
+      document.addEventListener('keydown', handleModalKeypress);
+    }
+  }
+  
+  function closeProjectModal() {
+    const modal = document.getElementById('project-modal');
+    const backdrop = document.getElementById('project-modal-backdrop');
+    
+    // Hide with animation
+    modal.classList.remove('visible');
+    backdrop.classList.remove('visible');
+    
+    // After animation completes, hide completely
+    setTimeout(() => {
+      backdrop.style.display = 'none';
+      // Clear modal content
+      document.getElementById('modal-content-container').innerHTML = '';
+    }, 300);
+    
+    // Restore scrolling
+    document.body.style.overflow = '';
+    
+    // Remove event listeners
+    document.removeEventListener('keydown', handleModalKeypress);
+  }
+  
+  function handleModalKeypress(e) {
+    if (e.key === 'Escape') {
+      closeProjectModal();
+    }
+  }
+  
+  function closeProjectModalFromBackdrop(event) {
+    // Only close if clicking directly on the backdrop, not on the modal content
+    if (event.target.id === 'project-modal-backdrop') {
+      closeProjectModal();
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     const timelineView = document.getElementById('timeline-view');
     const gridView = document.getElementById('grid-view');
@@ -322,6 +410,12 @@ horizontal: false
     document.addEventListener('keydown', function(e) {
       const key = e.key.toLowerCase();
       
+      // Check if modal is open - if so, only handle Escape key
+      const modalBackdrop = document.getElementById('project-modal-backdrop');
+      if (modalBackdrop && modalBackdrop.style.display === 'flex') {
+        return; // Let the modal's own keyboard handler take care of it
+      }
+      
       // Prevent default arrow key scrolling
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) {
         e.preventDefault();
@@ -343,6 +437,27 @@ horizontal: false
         navigateToProject(currentProjectIndex - 1);
       } else if (key === 'arrowdown' || key === 's') {
         navigateToProject(currentProjectIndex + 1);
+      }
+      
+      // Open the current active project with Enter key
+      if (key === 'enter') {
+        if (currentView === 'timeline') {
+          allProjects = getVisibleTimelineProjects();
+          if (allProjects.length > 0 && currentProjectIndex >= 0 && currentProjectIndex < allProjects.length) {
+            const activeProject = allProjects[currentProjectIndex];
+            if (activeProject) {
+              openProjectModal(activeProject.querySelector('.timeline-card-link'));
+            }
+          }
+        } else {
+          allProjects = getVisibleGridProjects();
+          if (allProjects.length > 0 && currentProjectIndex >= 0 && currentProjectIndex < allProjects.length) {
+            const activeProject = allProjects[currentProjectIndex];
+            if (activeProject) {
+              openProjectModal(activeProject);
+            }
+          }
+        }
       }
     });
     
