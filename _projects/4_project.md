@@ -1,10 +1,14 @@
 ---
 layout: page
-title: project 4
-description: another without an image
-img:
+title: Natural Language Processing for Clinical Data
+description: Using NLP techniques to extract insights from medical records
+abstract: This research project developed a specialized natural language processing system for analyzing clinical notes and electronic health records. Using a combination of BERT-based transformers fine-tuned on medical corpora, we created models capable of extracting key medical entities, identifying relationships between conditions and treatments, and summarizing patient histories. The system achieves 92% accuracy in medical entity recognition and has been deployed as a pilot program at three teaching hospitals to assist in clinical decision support and medical research.
+img: assets/img/5.jpg
 importance: 3
-category: fun
+category: software
+date: 2021-03-15
+organization: NVIDIA
+org_color: "#76b900"
 ---
 
 Every project has a beautiful feature showcase page.

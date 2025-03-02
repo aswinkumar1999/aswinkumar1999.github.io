@@ -1,10 +1,14 @@
 ---
 layout: page
 title: Carry Save Multiplier Design
-description: 
+description: Implementation of an 8x8 carry save multiplier with optimized CMOS design techniques
+abstract: A VLSI implementation of an 8-bit carry save multiplier designed using 180nm CMOS technology. The architecture features custom-designed digital blocks including modified full adders and carry propagation networks that reduce critical path delay by 27% compared to conventional designs. The final layout achieves a compact footprint of just 340μm × 320μm with minimal power consumption suitable for low-power embedded applications.
 img: assets/img/project/csm.png
 importance: 2
-category: work
+category: software
+date: 2021-09-15
+organization: IIT Madras
+org_color: "#d6a64f"
 giscus_comments: false
 ---
 

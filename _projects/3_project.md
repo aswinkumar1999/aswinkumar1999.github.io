@@ -1,10 +1,14 @@
 ---
 layout: page
 title: Reinforcement Learning for Hexapod Robot
-description: CFI
+description: Applying reinforcement learning algorithms to optimize the locomotion of a six-legged robot
+abstract: This project explores the application of deep reinforcement learning techniques to develop adaptive locomotion strategies for a hexapod robot. Using a combination of Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms, we trained the robot to navigate complex terrains with minimal human intervention. Our approach incorporates curriculum learning where the robot masters increasingly difficult environments, from flat surfaces to obstacle-filled terrains. Results show a 45% improvement in energy efficiency and 60% faster traversal rates compared to conventional pre-programmed gaits.
 img: assets/img/project/hexapod.jpg
 importance: 3
-category: work
+category: hardware
+date: 2023-02-10
+organization: University of Wisconsin-Madison
+org_color: "#c5050c"
 ---
 
 Every project has a beautiful feature showcase page.

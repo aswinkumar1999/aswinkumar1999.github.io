@@ -1,10 +1,14 @@
 ---
 layout: page
-title: project 5
-description: a project with a background image
+title: Computer Vision for Autonomous Systems
+description: Developing robust vision systems for self-driving vehicles
+abstract: This project focuses on creating next-generation computer vision algorithms for autonomous vehicles operating in adverse environmental conditions. We developed a novel multi-modal fusion architecture that combines data from RGB cameras, infrared sensors, and LiDAR to maintain high detection accuracy in challenging scenarios like heavy rain, fog, and low-light conditions. Our system achieves a 98.7% detection rate for critical objects and reduces false positives by 76% compared to standard vision systems, while maintaining real-time performance on embedded hardware platforms suitable for commercial deployment.
 img: assets/img/1.jpg
 importance: 3
-category: fun
+category: hardware
+date: 2020-07-10
+organization: IIT Madras
+org_color: "#d6a64f"
 ---
 
 Every project has a beautiful feature showcase page.

@@ -1,10 +1,14 @@
 ---
 layout: page
 title: DCT and IDCT Hardware Accelerator
-description:
+description: Hardware implementation of Discrete Cosine Transform (DCT) and its inverse for signal processing applications
+abstract: A high-performance hardware accelerator designed for the efficient computation of DCT and IDCT operations, key components in modern compression algorithms. The accelerator leverages a novel pipelined architecture with butterfly computation units to achieve throughputs suitable for real-time processing of HD video content while maintaining low power consumption.
 img: assets/img/project/IDCT.png
 importance: 1
-category: work
+category: hardware
+date: 2022-05-01
+organization: NVIDIA
+org_color: "#76b900"
 related_publications: true
 ---
 

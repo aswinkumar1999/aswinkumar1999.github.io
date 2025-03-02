@@ -1,10 +1,12 @@
 ---
 layout: page
-title: project 8
-description: an other project with a background image and giscus comments
+title: Wisconsin ML Project
+description: Machine learning research conducted at UW-Madison
 img: assets/img/9.jpg
 importance: 2
 category: work
+organization: University of Wisconsin-Madison
+org_color: "#c5050c"
 giscus_comments: true
 ---
 

@@ -1,10 +1,13 @@
 ---
 layout: page
-title: project 9
-description: another project with an image 🎉
+title: Robotics Competition Project
+description: Award-winning high school robotics project
 img: assets/img/6.jpg
 importance: 4
 category: fun
+date: 2018-05-15
+organization: High School
+org_color: "#3fdcbf"
 ---
 
 Every project has a beautiful feature showcase page.

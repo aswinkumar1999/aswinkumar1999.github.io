@@ -1,10 +1,13 @@
 ---
 layout: page
-title: project 7
-description: with background image
+title: High School Project
+description: Project from pre-college years
 img: assets/img/4.jpg
 importance: 1
-category: work
+category: hardware
+date: 2019-11-05
+organization: High School
+org_color: "#3fdcbf"
 related_publications: true
 ---
 

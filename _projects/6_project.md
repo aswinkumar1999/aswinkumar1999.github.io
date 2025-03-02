@@ -1,10 +1,13 @@
 ---
 layout: page
-title: project 6
-description: a project with no image
-img:
+title: Early AI Research Project
+description: Early exploration of neural networks for pattern recognition
+img: assets/img/8.jpg
 importance: 4
-category: fun
+category: software
+date: 2020-02-20
+organization: IIT Madras
+org_color: "#d6a64f"
 ---
 
 Every project has a beautiful feature showcase page.
