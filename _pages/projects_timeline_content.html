@@ -1,0 +1,495 @@
+<!-- Timeline Content included in projects.md -->
+<div class="timeline-container">
+  <!-- Filter buttons with Apple style -->
+  <div class="timeline-filter">
+    <div class="filter-container">
+      <div class="filter-slider"></div>
+      <button class="filter-btn" data-filter="software">Software</button>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="hardware">Hardware</button>
+    </div>
+  </div>
+  
+  <!-- Timeline bar - positioned in center on desktop, left on mobile -->
+  <div id="timeline-bar" style="position: absolute; left: 50%; transform: translateX(-50%); width: 14px; background-color: #696969; border-radius: 10px; z-index: 500;">
+    <!-- White capsule indicator that moves along the timeline -->
+    <div id="timeline-indicator" style="position: absolute; left: 50%; transform: translateX(-50%); width: 12px; height: 22px; background-color: #FFFFFF; border-radius: 10px; z-index: 9999; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); border: 1px solid #FFFFFF; pointer-events: none;"></div>
+  </div>
+  
+  <!-- Timeline entries -->
+  <div class="timeline-entries">
+    
+    <!-- Projects in timeline -->
+    {% assign sorted_projects = site.projects | sort: "date" | reverse %}
+    {% assign global_index = 0 %}
+    
+    {% for project in sorted_projects %}
+      {% assign is_left = global_index | modulo: 2 %}
+      {% assign global_index = global_index | plus: 1 %}
+      
+      <!-- Timeline entry -->
+      <div class="timeline-entry {% if is_left == 0 %}left{% else %}right{% endif %}" 
+           data-category="{{ project.category | default: 'other' }}"
+           {% if project.org_color %}style="--org-color: {{ project.org_color }};"{% endif %}>
+        <!-- Connecting dot to timeline - inline style for direct control -->
+        <div class="timeline-dot"></div>
+        <!-- Project card -->
+        <div class="timeline-card-link" data-project-id="{{ project.title | slugify }}" onclick="openProjectModal(this)">
+          <div class="timeline-card">
+            <div class="timeline-content">
+              {% if project.date %}
+                <div class="timeline-date">
+                  {% if project.organization %}{{ project.organization }} - {% endif %}{{ project.date | date: "%B %Y" }}
+                </div>
+              {% endif %}
+              
+              <h3 class="timeline-title">{{ project.title }}</h3>
+              
+              {% if project.img %}
+                <div class="timeline-img">
+                  {% include figure.liquid loading="eager" path=project.img alt="project thumbnail" %}
+                </div>
+              {% endif %}
+              
+              <div class="timeline-desc">{{ project.description }}</div>
+              
+              {% if project.github %}
+                <div class="timeline-links">
+                  <a href="{{ project.github }}" target="_blank" class="github-link" onclick="event.stopPropagation();" style="color: var(--org-color, var(--global-theme-color));">
+                    <i class="fa-brands fa-github"></i> <span style="color: var(--org-color, var(--global-theme-color));">Code</span>
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Hidden project content for modal -->
+        <div id="modal-content-{{ project.title | slugify }}" style="display: none;">
+          <div class="modal-header" {% if project.org_color %}style="border-color: {{ project.org_color }};"{% endif %}>
+            <h2>{{ project.title }}</h2>
+            {% if project.organization %}
+              <div class="modal-org" {% if project.org_color %}style="color: {{ project.org_color }};"{% endif %}>
+                {{ project.organization }} - {{ project.date | date: "%B %Y" }}
+              </div>
+            {% endif %}
+          </div>
+          
+          {% if project.img %}
+            <div class="modal-img">
+              {% include figure.liquid loading="eager" path=project.img alt="project thumbnail" %}
+            </div>
+          {% endif %}
+          
+          <div class="modal-description">
+            <p>{{ project.description }}</p>
+            
+            {% if project.github %}
+              <div class="modal-links">
+                <a href="{{ project.github }}" target="_blank" class="github-link" {% if project.org_color %}style="color: {{ project.org_color }};"{% endif %}>
+                  <i class="fa-brands fa-github"></i> View Code
+                </a>
+              </div>
+            {% endif %}
+            
+            <div class="modal-content">
+              {{ project.content }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<!-- Add blank space after timeline (reduced by half) -->
+<div style="height: 25vh; width: 100%; clear: both;"></div>
+
+<!-- Timeline JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get key elements
+    const timelineBar = document.getElementById('timeline-bar');
+    const timelineIndicator = document.getElementById('timeline-indicator');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const filterSlider = document.querySelector('.filter-slider');
+    const allEntries = document.querySelectorAll('.timeline-entry');
+    
+    // Position the timeline bar initially
+    // We no longer need to position the dots via JavaScript
+    // CSS handles this with top: 50% and transform: translateY(-50%)
+    function positionConnectingDots() {
+      // This function is now just a placeholder for compatibility
+      console.log("Dots are positioned by CSS with centered alignment");
+    }
+    
+    // Position the timeline bar to align with the first and last projects
+    function positionTimelineBar() {
+      const visibleEntries = Array.from(allEntries).filter(entry => 
+        entry.style.display !== 'none'
+      );
+      
+      if (visibleEntries.length > 0) {
+        // First position the connecting dots at the center of each card
+        positionConnectingDots();
+        
+        const firstEntry = visibleEntries[0];
+        const lastEntry = visibleEntries[visibleEntries.length - 1];
+        
+        // Get the dots for first and last entries
+        const firstDot = firstEntry.querySelector('.timeline-dot');
+        const lastDot = lastEntry.querySelector('.timeline-dot');
+        
+        // Check if we're on mobile
+        const isMobile = window.innerWidth <= 768;
+        
+        if (firstDot && lastDot) {
+          // Calculate the relative position within timeline container
+          const firstEntryRect = firstEntry.getBoundingClientRect();
+          const lastEntryRect = lastEntry.getBoundingClientRect();
+          const timelineContainer = document.querySelector('.timeline-container').getBoundingClientRect();
+          
+          // Get the indicator height
+          const indicatorHeight = 22; // From the inline style
+          
+          // Calculate half the height of the first and last project tiles
+          const firstEntryHalfHeight = firstEntryRect.height / 2;
+          const lastEntryHalfHeight = lastEntryRect.height / 2;
+          
+          // Get the same offset used for snapping
+          const snapVisualOffset = -10; // Same value used in the scroll snapping code
+          
+          // Calculate where the indicator would snap to for the first project
+          // This gives us the exact position where the scrollbar should start
+          const viewportHeight = window.innerHeight;
+          const topOffset = firstEntryHalfHeight - (indicatorHeight*1.25); // Adjusted to +25px to fine-tune gap
+          
+          // For bottom, reduce by 1.5 times the indicator height
+          const bottomOffset = -lastEntryHalfHeight;
+          
+          // Top position is first entry relative to the container plus half its height
+          // This places the timeline start point at the middle of the first project
+          const topPosition = firstEntryRect.top - timelineContainer.top + topOffset;
+          
+          // Let's try a completely different approach for the height calculation
+          // Instead of using offsets, directly calculate start and end positions
+          const endPosition = lastEntryRect.top - timelineContainer.top + (lastEntryRect.height / 2) - (indicatorHeight / 2);
+          const barHeight = endPosition - topPosition;
+          
+          // Set the bar position directly
+          timelineBar.style.top = `${topPosition}px`;
+          timelineBar.style.height = `${barHeight}px`;
+          
+          console.log("Timeline bar positioned with fixed offsets", { top: topPosition, height: barHeight });
+        } else {
+          // Simple fallback
+          const firstRect = firstEntry.getBoundingClientRect();
+          const lastRect = lastEntry.getBoundingClientRect();
+          const timelineContainer = document.querySelector('.timeline-container').getBoundingClientRect();
+          
+          // Get the indicator height
+          const indicatorHeight = 22; // From the inline style
+          
+          // Calculate half heights for offsets
+          const firstHalfHeight = firstRect.height / 2;
+          const lastHalfHeight = lastRect.height / 2;
+          
+          // Account for indicator height in offsets
+          const topOffset = firstHalfHeight - indicatorHeight ; // Additional adjustment
+          const bottomOffset = 0;
+          
+          // Calculate positions based on half heights
+          const topPosition = firstRect.top - timelineContainer.top + topOffset;
+          // Direct calculation for fallback as well
+          const endPosition = lastRect.top - timelineContainer.top + (lastRect.height / 2) - (indicatorHeight / 2);
+          const barHeight = endPosition - topPosition;
+          
+          timelineBar.style.top = `${topPosition}px`;
+          timelineBar.style.height = `${barHeight}px`;
+        }
+      }
+    }
+    
+    // Set up filter buttons
+    filterButtons.forEach((button, index) => {
+      button.addEventListener('click', function() {
+        // Update active button 
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Move slider
+        const buttonWidth = 100 / filterButtons.length;
+        filterSlider.style.left = `calc(${buttonWidth * index}% + 6px)`;
+        filterSlider.style.width = `calc(${buttonWidth}% - 12px)`;
+        
+        // Apply filter
+        const filter = this.getAttribute('data-filter');
+        console.log("Filter selected:", filter);
+        
+        // Fade out entries
+        allEntries.forEach(entry => {
+          entry.style.opacity = '0';
+        });
+        
+        // After fade out, apply filter
+        setTimeout(() => {
+          // Show/hide entries based on filter
+          allEntries.forEach(entry => {
+            const category = entry.getAttribute('data-category');
+            entry.style.display = (filter === 'all' || category === filter) ? '' : 'none';
+          });
+          
+          // Get visible entries
+          const visibleEntries = Array.from(allEntries).filter(entry => 
+            entry.style.display !== 'none'
+          );
+          
+          // Apply alternating left/right pattern
+          visibleEntries.forEach((entry, index) => {
+            // Reset position classes
+            entry.classList.remove('left', 'right');
+            entry.classList.add(index % 2 === 0 ? 'left' : 'right');
+            
+            // Only fix horizontal position but preserve vertical centering
+            const dot = entry.querySelector('.timeline-dot');
+            if (dot) {
+              const isLeft = index % 2 === 0;
+              dot.style.left = isLeft ? '' : '-8px';
+              dot.style.right = isLeft ? '-8px' : '';
+              // Don't set top position - CSS handles vertical centering
+            }
+          });
+          
+          // First fade in entries
+          setTimeout(() => {
+            visibleEntries.forEach(entry => {
+              entry.style.opacity = '';
+            });
+            
+            // Now position connecting dots and timeline bar after entries are visible
+            // This ensures proper positioning based on visible entries
+            setTimeout(() => {
+              // Requery visible entries to ensure we have the most up-to-date list
+              const currentVisibleEntries = Array.from(allEntries).filter(entry => 
+                entry.style.display !== 'none'
+              );
+              
+              // Force recalculation of layout
+              document.body.offsetHeight;
+              
+              // Using CSS-based positioning for dots
+              // No need to manually position dots - CSS handles it with top: calc(50% - 24px)
+              
+              // Now position the timeline bar based on the updated dots
+              if (currentVisibleEntries.length > 0) {
+                const firstEntry = currentVisibleEntries[0];
+                const lastEntry = currentVisibleEntries[currentVisibleEntries.length - 1];
+                const containerRect = document.querySelector('.timeline-container').getBoundingClientRect();
+                
+                const firstDot = firstEntry.querySelector('.timeline-dot');
+                const lastDot = lastEntry.querySelector('.timeline-dot');
+                
+                if (firstDot && lastDot) {
+                  const firstDotRect = firstDot.getBoundingClientRect();
+                  const lastDotRect = lastDot.getBoundingClientRect();
+                  
+                  // Use the same positioning logic as the main timeline positioning
+                  // Get the indicator height
+                  const indicatorHeight = 22; // From the inline style
+                  
+                  // Calculate half the height of the first and last project tiles
+                  const firstEntryRect = firstEntry.getBoundingClientRect();
+                  const lastEntryRect = lastEntry.getBoundingClientRect();
+                  const firstEntryHalfHeight = firstEntryRect.height / 2;
+                  const lastEntryHalfHeight = lastEntryRect.height / 2;
+                  
+                  // For filtered categories, we need to move the bar higher
+                  const snapVisualOffset = -10;
+                  const viewportHeight = window.innerHeight;
+                  // Add more negative offset (-11px) when filtering categories
+                  const topOffset = firstEntryHalfHeight - (indicatorHeight / 2) - 25 + 25 - 11;
+                  
+                  // For bottom, use same calculation 
+                  const bottomOffset = -lastEntryHalfHeight - (indicatorHeight * 1.5);
+                  
+                  // Calculate positions using the same approach
+                  const topPosition = firstEntryRect.top - containerRect.top + topOffset;
+                  
+                  // Use direct calculation for height
+                  const endPosition = lastEntryRect.top - containerRect.top + (lastEntryRect.height / 2) - (indicatorHeight / 2);
+                  const barHeight = endPosition - topPosition;
+                  
+                  timelineBar.style.top = `${topPosition}px`;
+                  timelineBar.style.height = `${barHeight}px`;
+                  
+                  console.log("Timeline bar positioned after filter with consistent logic", { top: topPosition, height: barHeight });
+                }
+              }
+            }, 200); // Increased delay to ensure DOM updates are complete
+          }, 100);
+        }, 300);
+      });
+    });
+    
+    // Variables for gentle snapping
+    let scrollTimeout = null;
+    let isScrolling = false;
+    let targetScrollY = null;
+    
+    // Position the indicator on scroll
+    window.addEventListener('scroll', function() {
+      if (!timelineIndicator || !timelineBar) return;
+      
+      const viewportHeight = window.innerHeight;
+      const viewportCenter = viewportHeight / 2;
+      const timelineRect = timelineBar.getBoundingClientRect();
+      const containerRect = document.querySelector('.timeline-container').getBoundingClientRect();
+      const isMobile = window.innerWidth <= 768;
+      
+      // Calculate normalized scroll position relative to timeline bar
+      const scrollPercentage = Math.max(0, Math.min(1, (viewportCenter - timelineRect.top) / timelineRect.height));
+      const indicatorPosition = timelineRect.height * scrollPercentage;
+      
+      // Constrain the indicator within the timeline bar
+      if (indicatorPosition < 0) {
+        timelineIndicator.style.top = '0px';
+      } else if (indicatorPosition > timelineRect.height - 22) { // 22px is the new indicator height
+        timelineIndicator.style.top = (timelineRect.height - 22) + 'px';
+      } else {
+        timelineIndicator.style.top = indicatorPosition + 'px';
+      }
+      
+      // Find closest project to highlight
+      const visibleEntries = Array.from(allEntries).filter(entry => 
+        entry.style.display !== 'none'
+      );
+      
+      let closestEntry = null;
+      let closestDistance = Infinity;
+      
+      visibleEntries.forEach(entry => {
+        const rect = entry.getBoundingClientRect();
+        const entryCenter = rect.top + (rect.height / 2);
+        const distance = Math.abs(viewportCenter - entryCenter);
+        
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestEntry = entry;
+        }
+      });
+      
+      // Highlight closest entry
+      if (closestEntry) {
+        allEntries.forEach(entry => entry.classList.remove('active'));
+        closestEntry.classList.add('active');
+        
+        // Detect scroll end and apply gentle snap effect
+        isScrolling = true;
+        
+        // Clear previous timeout
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+        }
+        
+        // Set a timeout for scrolling end
+        scrollTimeout = setTimeout(function() {
+          isScrolling = false;
+          
+          // Get closest project for snapping when scroll ends
+          if (closestDistance < 150) { // Increased distance threshold for snapping
+            const closestRect = closestEntry.getBoundingClientRect();
+            
+            // Find the dot (connection to timeline) for this entry
+            const dot = closestEntry.querySelector('.timeline-dot');
+            if (dot) {
+              // Calculate position to align the dot with the center of the viewport
+              const dotRect = dot.getBoundingClientRect();
+              // Get position of the dot
+              const dotTop = dotRect.top;
+              
+              // Apply a small offset to align with the timeline connecting line
+              // The offset is -10px to move slightly above the dot
+              const visualOffset = -10;
+              
+              // Calculate the target scroll position
+              const targetY = window.scrollY + dotTop - (viewportHeight / 2) + visualOffset;
+              
+              // Smoothly scroll to the target
+              window.scrollTo({
+                top: targetY,
+                behavior: 'smooth'
+              });
+              
+              console.log("Snapping with offset", {
+                dotTop: dotTop,
+                visualOffset: visualOffset,
+                targetY: targetY
+              });
+            } else {
+              // Fallback to centering the card if dot isn't found
+              const targetY = window.scrollY + closestRect.top + (closestRect.height / 2) - (viewportHeight / 2);
+              
+              // Smoothly scroll to the target
+              window.scrollTo({
+                top: targetY,
+                behavior: 'smooth'
+              });
+            }
+          }
+        }, 500); // 500ms delay before snapping
+      }
+    });
+    
+    // Initialize slider position
+    const activeButtonIndex = Array.from(filterButtons).findIndex(btn => btn.classList.contains('active'));
+    if (activeButtonIndex !== -1) {
+      const buttonWidth = 100 / filterButtons.length;
+      filterSlider.style.left = `calc(${buttonWidth * activeButtonIndex}% + 6px)`;
+      filterSlider.style.width = `calc(${buttonWidth}% - 12px)`;
+    }
+    
+    // When everything's loaded, position the timeline and connecting dots
+    window.addEventListener('load', function() {
+      // Check for mobile and update the layout if needed
+      const checkMobile = function() {
+        const isMobile = window.innerWidth <= 768;
+        
+        // Update timeline bar based on viewport
+        if (isMobile) {
+          // Mobile: move timeline bar to the left
+          timelineBar.style.left = '20px';
+          timelineBar.style.transform = 'none';
+          timelineIndicator.style.left = '50%';
+          timelineIndicator.style.transform = 'translateX(-50%)';
+        } else {
+          // Desktop: center timeline bar
+          timelineBar.style.left = '50%';
+          timelineBar.style.transform = 'translateX(-50%)';
+          timelineIndicator.style.left = '50%';
+          timelineIndicator.style.transform = 'translateX(-50%)';
+        }
+      };
+      
+      // Call immediately
+      checkMobile();
+      
+      // Also call on resize
+      window.addEventListener('resize', checkMobile);
+      
+      positionTimelineBar();
+      // Force a scroll event to position the indicator
+      window.dispatchEvent(new Event('scroll'));
+    });
+    
+    // Also reposition dots on window resize
+    window.addEventListener('resize', function() {
+      positionConnectingDots();
+    });
+    
+    // Prevent GitHub links from triggering card navigation
+    document.querySelectorAll('.github-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    });
+  });
+</script>
