@@ -673,9 +673,9 @@
       </thead>
       <tbody>
         <tr><td><strong>ST1</strong></td><td>1 blue</td><td>None</td><td>Pick one blue sponge and place it in the bowl.</td><td>Base single-object grasp + place.</td><td>T1 (128 eps)</td></tr>
-        <tr><td><strong>ST2</strong></td><td>2 blue</td><td>None</td><td>Pick two blue sponges and place both in the bowl.</td><td>Multi-object sequencing, re-engagement.</td><td>T2 (128 eps)</td></tr>
+        <tr><td><strong>ST2</strong></td><td>1–6 blue</td><td>None</td><td>Pick every blue sponge in the scene and place them all in the bowl (count varies 1–6 per scene).</td><td>Multi-object sequencing, re-engagement.</td><td>T2 (128 eps)</td></tr>
         <tr><td><strong>ST3</strong></td><td>1 blue</td><td>Yes — colored distractors</td><td>Pick the blue sponge among visually similar distractors.</td><td>Color / object selection robustness.</td><td>T3 (128 eps)</td></tr>
-        <tr><td><strong>ST4</strong></td><td>2 blue</td><td>Yes — colored distractors</td><td>Pick multiple blue sponges from a cluttered scene.</td><td>Joint composition: selection × sequencing.</td><td><em>None — held-out</em></td></tr>
+        <tr><td><strong>ST4</strong></td><td>1–6 blue</td><td>Yes — colored distractors</td><td>Pick every blue sponge from a cluttered scene (count varies 1–6 per scene).</td><td>Joint composition: selection × sequencing.</td><td><em>None — held-out</em></td></tr>
       </tbody>
     </table>
     <p style="color:var(--muted); font-size:14px;">Sponge color, bowl, and gripper geometry are fixed across all tasks; only object count and distractors change. This isolates compositional generalization from low-level perception changes.</p>
@@ -712,7 +712,7 @@
         <tr><td><code>D_Universal</code></td><td>D1 + D2 + D3 Combined — every demonstration we collected.</td><td>384</td></tr>
       </tbody>
     </table>
-    <p style="color:var(--muted); font-size:14px;">So when a results table shows <code>D1+D2-Half</code> on ST2, it means: trained on all 128 single-sponge demos plus 64 multi-sponge demos, evaluated on the two-sponge task. The "Half" suffix flags that only half of the secondary task's data is used — a deliberate test of how little auxiliary data is enough.</p>
+    <p style="color:var(--muted); font-size:14px;">So when a results table shows <code>D1+D2-Half</code> on ST2, it means: trained on all 128 single-sponge demos plus 64 multi-sponge demos, evaluated on the multi-sponge task. The "Half" suffix flags that only half of the secondary task's data is used — a deliberate test of how little auxiliary data is enough.</p>
 
     <p>The dataset is open-sourced on Hugging Face: <a href="https://huggingface.co/datasets/aswinkumar99/LeRobot-SO101-Pick-Place"><code>aswinkumar99/LeRobot-SO101-Pick-Place</code></a>.</p>
 
@@ -724,8 +724,8 @@
       </div>
       <div class="media-card">
         <div class="title">T2 — multi-sponge</div>
-        <img src="gifs/demo_task2.gif" alt="T2 teleop demo: two blue sponges to bowl" />
-        <div class="cap">Pick two blue sponges sequentially. 128 episodes.</div>
+        <img src="gifs/demo_task2.gif" alt="T2 teleop demo: multiple blue sponges to bowl" />
+        <div class="cap">Pick every blue sponge in the scene (1–6 per scene) sequentially. 128 episodes.</div>
       </div>
       <div class="media-card">
         <div class="title">T3 — clutter / distractors</div>
@@ -852,7 +852,7 @@
         <ul style="font-size:15px; color:var(--text); padding-left:18px;">
           <li><strong>G</strong> — grasp miss (closed on air, knocked sponge, slipped)</li>
           <li><strong>C</strong> — color/object selection error (grabbed a distractor)</li>
-          <li><strong>S</strong> — sequencing error (only one of two sponges placed)</li>
+          <li><strong>S</strong> — sequencing error (one or more sponges left in the scene)</li>
           <li><strong>P</strong> — placement miss (dropped outside bowl)</li>
           <li><strong>D</strong> — mid-air drop after successful grasp</li>
           <li><strong>O</strong> — other (timeout, safety stop)</li>
@@ -986,8 +986,8 @@
     <!-- Inference 2 (was Inference 3) -->
     <div class="inference">
       <h3><span class="ix">Inference 2.</span> Single-task training does not compose to multi-object (ST2).</h3>
-      <p><em>Why we expected it to:</em> humans who can pick one sponge can trivially pick two — the second sponge is the same skill, repeated. Large language models show analogous behavior: a model that learns to add two numbers usually generalizes to adding three. So a reasonable prior is that a policy fluent in single-sponge picking should compose into two-sponge picking with little or no additional data.</p>
-      <p><em>What actually happened:</em> a policy trained on all 128 single-sponge demos (<code>D1-Combined</code>) does <em>not</em> stitch together a two-sponge rollout on its own. ST2 scores from <code>D1-Combined</code> are <strong>3.5</strong> (ACT), <strong>2.5</strong> (SmolVLA), <strong>7.0</strong> (Pi0.5). Adding just <strong>64 multi-sponge episodes</strong> (<code>D1+D2-Half</code>) raises ACT to <strong>18.5</strong> and Pi0.5 to <strong>17.0</strong> — close to the full <code>D_Universal</code> result. SmolVLA recovers more partially (<strong>13.0</strong>) and only reaches ceiling with the full universal mixture. Small amounts of the right data beat larger amounts of the wrong data — though the T1 → ST3 and T1 → ST4 analogues weren't trained, so the claim is anchored to ST2.</p>
+      <p><em>Why we expected it to:</em> humans who can pick one sponge can trivially pick several — each additional sponge is the same skill, repeated. Large language models show analogous behavior: a model that learns to add two numbers usually generalizes to adding three. So a reasonable prior is that a policy fluent in single-sponge picking should compose into multi-sponge picking with little or no additional data.</p>
+      <p><em>What actually happened:</em> a policy trained on all 128 single-sponge demos (<code>D1-Combined</code>) does <em>not</em> stitch together a multi-sponge rollout on its own. ST2 scores from <code>D1-Combined</code> are <strong>3.5</strong> (ACT), <strong>2.5</strong> (SmolVLA), <strong>7.0</strong> (Pi0.5). Adding just <strong>64 multi-sponge episodes</strong> (<code>D1+D2-Half</code>) raises ACT to <strong>18.5</strong> and Pi0.5 to <strong>17.0</strong> — close to the full <code>D_Universal</code> result. SmolVLA recovers more partially (<strong>13.0</strong>) and only reaches ceiling with the full universal mixture. Small amounts of the right data beat larger amounts of the wrong data — though the T1 → ST3 and T1 → ST4 analogues weren't trained, so the claim is anchored to ST2.</p>
       <a class="img-zoom" href="plots/st2_full_results.png" target="_blank"><img src="plots/st2_full_results.png" alt="ST2 full results" /></a>
       <div class="img-caption">ST2 scores by dataset × architecture. <code>D1+D2-Half</code> recovers most of the universal benefit.</div>
     </div>
