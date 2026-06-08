@@ -442,6 +442,46 @@
       border: 0;
       background: #000;
     }
+    /* Mobile / narrow viewport: replace the iframe with a "Enter fullscreen"
+       button so the heavy gallery does not render inside a cramped frame.
+       Tapping the button opens the gallery in a new tab where it can take
+       the full mobile screen on its own. */
+    .gallery-mobile-cta { display: none; }
+    @media (max-width: 700px) {
+      .gallery-frame { display: none; }
+      .gallery-mobile-cta {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 22px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #1a1a1f 0%, #0b0b0d 100%);
+        color: #fff;
+        text-decoration: none;
+      }
+      .gallery-mobile-cta:hover { text-decoration: none; }
+      .gallery-mobile-cta .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: 26px;
+        background: #fff;
+        color: #111;
+        font-weight: 700;
+        font-size: 15px;
+        font-family: inherit;
+        margin-top: 4px;
+      }
+      .gallery-mobile-cta .hint {
+        color: #9a9aa3;
+        font-size: 13px;
+        text-align: center;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+    }
     .inference {
       margin: 32px 0 8px;
     }
@@ -531,12 +571,17 @@
     <div class="venue">CS839 Topics in Advanced Robotics · Spring 2026</div>
     <h1>Data Composition vs Architecture in Robot Imitation Learning</h1>
     <p class="subtitle">When does narrow-task training transfer? A real-robot study across task composition, spatial generalization, and three policy architectures.</p>
+    <p style="margin: 0 auto 14px; max-width: 780px; color: var(--light); font-size: 14px; letter-spacing: 0.04em; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;">
+      384 teleop demos &nbsp;·&nbsp; 684 scored rollouts &nbsp;·&nbsp; 39 policies &nbsp;·&nbsp; 202 GPU-hours &nbsp;·&nbsp; 1 SO-ARM101
+    </p>
     <div class="authors">
       <span><strong>Aswinkumar</strong></span>
     </div>
     <div class="affiliation">University of Wisconsin-Madison · SO-ARM101 Pick-and-Place Evaluation</div>
     <div class="links">
-      <a class="button" href="https://huggingface.co/datasets/aswinkumar99/LeRobot-SO101-Pick-Place">🤗 Hugging Face Dataset</a>
+      <a class="button" href="https://github.com/aswinkumar1999/so-arm101-imitation-learning" target="_blank" rel="noopener">⌘ Code</a>
+      <a class="button" href="https://huggingface.co/datasets/aswinkumar99/LeRobot-SO101-Pick-Place" target="_blank" rel="noopener">🤗 Dataset</a>
+      <a class="button" href="https://huggingface.co/datasets/aswinkumar99/so101-eval-gallery" target="_blank" rel="noopener">🤗 Eval Gallery</a>
       <a class="button light" href="#bibtex">BibTeX</a>
     </div>
   </header>
@@ -568,6 +613,10 @@
       <div class="gallery-frame">
         <iframe id="gallery-iframe" src="eval_gallery_embed/index.html" title="Eval gallery" allow="autoplay" loading="lazy"></iframe>
       </div>
+      <a class="gallery-mobile-cta" href="eval_gallery_embed/index.html" target="_blank" rel="noopener">
+        <span class="hint">The eval gallery is too dense to render inline on a small screen.</span>
+        <span class="btn">⛶ &nbsp; Open Eval Gallery</span>
+      </a>
     </div>
   </div>
 
@@ -590,6 +639,7 @@
     <div class="abstract">
       <p>Imitation learning policies can reproduce demonstrated robot behavior in-distribution, but it is less clear when they learn reusable manipulation primitives rather than scene-specific shortcuts. I study this question on a real SO-ARM101 robot using a sponge pick-and-place task family. The study varies demonstration data composition and compares three policy families: ACT trained from scratch, SmolVLA, and Pi0.5.</p>
         <p>Across 684 scored robot rollouts, the results show that data composition often dominates architecture choice. Marked-position datasets overfit, single-task training does not reliably compose to multi-object behavior, and small amounts of task-relevant cross-task data recover most of the benefit of universal training. Adding visual distractors changes the failure profile itself: color- and object-selection errors become as important as grasping errors. Pretrained VLA policies help in some regimes, but they do not remove the need for carefully structured robot data.</p>
+      <p>Beyond the headline metrics, three engineering lessons stood out. <strong>Data bugs look like model bugs</strong> — marked-position overfitting initially read as an architecture failure until the K/R split exposed the dataset shortcut. <strong>Evaluation UX is part of the experiment</strong> — a custom iPad dashboard that tagged failure modes inline made 684 rollouts tractable in a weekend without transcription errors. And <strong>objects have state</strong> — the same blue sponge stiffens when left out, turning a previously reliable pinch grip into a different contact problem, which physically explains some of the ST3/ST4 grasp misses.</p>
     </div>
   </section>
 
