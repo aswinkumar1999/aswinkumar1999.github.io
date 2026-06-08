@@ -206,6 +206,52 @@
       letter-spacing: 0.06em; pointer-events: none;
     }
     #empty-msg.on { display: flex; }
+
+    /* =========================================================
+       Mobile / portrait phone: switch from a fit-to-viewport grid
+       to a vertically-scrollable 3-column gallery. The desktop
+       layout assumes a wide letterboxed iframe; on phones in
+       portrait you get a much better experience scrolling through
+       many tall rows than squinting at one shallow row.
+       ========================================================= */
+    @media (max-width: 700px) {
+      html, body { overflow-y: auto; overflow-x: hidden; height: auto; }
+      #wall {
+        width: 100vw;
+        height: auto;          /* let it grow with the tile count */
+        min-height: 100vh;
+        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-rows: none !important;
+        grid-auto-rows: minmax(0, 1fr);  /* JS still sets aspect via .tile */
+        padding: 2px 2px 76px;            /* bottom space for sticky filters */
+      }
+      /* Stack the filter rows at the bottom in a single sticky strip so
+         MODEL and TASK are both visible without thumb-wandering. */
+      .filters {
+        position: fixed;
+        bottom: 0;
+        left: 0; right: 0;
+        padding: 8px;
+        background: rgba(11,11,13,0.92);
+        border-top: 1px solid rgba(255,255,255,0.12);
+        backdrop-filter: blur(8px);
+        z-index: 200;
+      }
+      .filters.left  { bottom: 50px; left: 0; right: 0; }   /* MODEL row */
+      .filters.right { bottom: 0;    left: 0; right: 0; }   /* TASK row  */
+      .filters .filter-row {
+        width: 100%;
+        justify-content: center;
+        border-radius: 0;
+        background: transparent;
+        border: 0;
+        backdrop-filter: none;
+        padding: 0;
+      }
+      .chip { padding: 6px 10px; font-size: 12px; }
+      #title { font-size: 16px; letter-spacing: 0.12em; top: 8px; }
+      #status { top: 32px; font-size: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -247,20 +293,30 @@
     const WALL = document.getElementById('wall');
 
     function pickGridForViewport() {
-      // Iframe-relative sizing: aim for TARGET_COLS, scale rows so tiles stay 16:9.
       const W = window.innerWidth, H = window.innerHeight;
-      // Pick cols by trying TARGET_COLS first, then clamp so resulting tile fits height.
+
+      // Mobile / portrait phone: pin to 3 cols, render many tiles in a
+      // vertically scrollable wall. Capacity is large so the page scrolls.
+      if (W <= 700) {
+        const cols = 3;
+        // Aim for ~6 viewport-heights of scroll content — generous enough
+        // to feel like a real gallery without exhausting decoder count.
+        const tileH = (W / cols) / TILE_ASPECT;
+        const rows = Math.max(8, Math.ceil((H * 6) / tileH));
+        return { cols, rows, capacity: Math.min(60, cols * rows) };
+      }
+
+      // Desktop: iframe-relative sizing — aim for TARGET_COLS, scale rows so
+      // tiles stay 16:9 inside the viewport.
       let cols = TARGET_COLS;
       let tileW = W / cols;
       let tileH = tileW / TILE_ASPECT;
       let rows = Math.max(1, Math.floor(H / tileH));
-      // If too few rows (very wide & short iframe), grow cols.
       while (rows < 2 && cols < MAX_COLS) {
         cols++;
         tileW = W / cols; tileH = tileW / TILE_ASPECT;
         rows = Math.max(1, Math.floor(H / tileH));
       }
-      // If too few cols for a usable grid (very narrow), shrink cols.
       while (cols > MIN_COLS && tileW < 120) {
         cols--;
         tileW = W / cols; tileH = tileW / TILE_ASPECT;
