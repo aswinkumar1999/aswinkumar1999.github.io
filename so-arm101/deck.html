@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Data Composition vs Architecture in Robot Imitation Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="deck-stage.js"></script>
+<style>
+  :root {
+    --ink: #1F2937;
+    --ink-2: #4B5563;
+    --ink-3: #6B7280;
+    --ink-4: #9CA3AF;
+    --rule: #E5E7EB;
+    --bg: #FFFFFF;
+    --bg-soft: #F9FAFB;
+    --ph-bg: #F3F4F6;
+    --ph-border: #9CA3AF;
+
+    --act: #2E5EAA;
+    --smolvla: #3D8B5C;
+    --pi05: #D97706;
+
+    --act-soft: #DCE6F4;
+    --smolvla-soft: #DEEBE3;
+    --pi05-soft: #F8E4C7;
+
+    /* TYPE_SCALE (px, projection-appropriate; user req'd 28pt titles, 16-18pt body) */
+    --t-title: 38px;     /* ~28pt */
+    --t-subtitle: 32px;  /* ~24pt */
+    --t-pull: 44px;      /* pull-quotes */
+    --t-pull-lg: 60px;   /* big stat */
+    --t-body: 24px;      /* ~18pt */
+    --t-body-sm: 22px;
+    --t-small: 18px;     /* footer/captions */
+    --t-tiny: 14px;
+
+    /* SPACING */
+    --pad-x: 96px;
+    --pad-top: 72px;
+    --pad-bottom: 64px;
+    --gap-title: 36px;
+    --gap-item: 24px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0a0a0a; }
+  body { font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+  deck-stage > section {
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--t-body);
+    line-height: 1.4;
+    padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ---------- Common chrome ---------- */
+  .slide-title {
+    font-size: var(--t-title);
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    text-align: left;
+    margin: 0 0 var(--gap-title) 0;
+    line-height: 1.15;
+  }
+  .slide-eyebrow {
+    font-size: var(--t-small);
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .footer {
+    position: absolute;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--t-small);
+    color: var(--ink-4);
+    font-weight: 400;
+  }
+  .footer .num { font-variant-numeric: tabular-nums; }
+  .hr {
+    height: 1px;
+    background: var(--rule);
+    border: 0;
+    width: 100%;
+    margin: 0;
+  }
+
+  /* ---------- Placeholder boxes ---------- */
+  .ph {
+    background: var(--ph-bg);
+    border: 2px dashed var(--ph-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--ink-3);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 18px;
+    padding: 16px 24px;
+    line-height: 1.4;
+  }
+  .ph-photo { background: #EEF1F4; }
+  .ph-chart { background: #FAFAFA; border-color: #B5B5B5; }
+  .ph-media {
+    background: #000;
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    padding: 0;
+    display: block;
+    position: relative;
+  }
+  .ph-media img, .ph-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .ph-chart-real {
+    background: #fff;
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    padding: 0;
+    display: block;
+  }
+  .ph-chart-real img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* ---------- Architecture badges ---------- */
+  .arch-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 18px;
+    font-weight: 500;
+    color: white;
+  }
+  .arch-act { background: var(--act); }
+  .arch-smolvla { background: var(--smolvla); }
+  .arch-pi05 { background: var(--pi05); }
+
+  /* ---------- Slide 1: Title ---------- */
+  .s1 {
+    flex-direction: row;
+    padding: 0;
+    align-items: stretch;
+  }
+  .s1 .left {
+    flex: 1.05;
+    padding: 120px 80px 100px 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .s1 .meta {
+    font-size: 18px;
+    color: var(--ink-3);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 28px;
+  }
+  .s1 h1 {
+    font-size: 72px;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 0 32px 0;
+    color: var(--ink);
+    max-width: 14ch;
+  }
+  .s1 .sub {
+    font-size: 26px;
+    color: var(--ink-2);
+    line-height: 1.4;
+    max-width: 32ch;
+    margin-bottom: 80px;
+    font-weight: 400;
+  }
+  .s1 .author {
+    font-size: 18px;
+    color: var(--ink-3);
+    border-top: 1px solid var(--rule);
+    padding-top: 24px;
+    max-width: 540px;
+  }
+  .s1 .author strong { color: var(--ink); font-weight: 600; }
+  .s1 .right {
+    flex: 0.95;
+    background: var(--bg-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px;
+  }
+  .s1 .right .ph { width: 100%; height: 100%; min-height: 640px; }
+
+  /* ---------- Slide 2: Motivation ---------- */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    flex: 1;
+    min-height: 0;
+  }
+  .two-col .ph { width: 100%; height: 100%; }
+  .col-cap {
+    font-size: 20px;
+    color: var(--ink-3);
+    margin-bottom: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .col-with-cap {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .col-with-cap .ph { flex: 1; }
+  .pull-strip {
+    font-size: 32px;
+    line-height: 1.3;
+    color: var(--ink);
+    font-weight: 400;
+    margin-top: 36px;
+    max-width: 1500px;
+    text-wrap: pretty;
+  }
+
+  /* ---------- Slide 3: Research Question ---------- */
+  .s3 .center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 1500px;
+  }
+  .rq-main {
+    font-size: 40px;
+    line-height: 1.3;
+    color: var(--ink);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-bottom: 56px;
+    text-wrap: pretty;
+  }
+  .rq-main .star {
+    color: var(--act);
+    margin-right: 12px;
+  }
+  .rq-subs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .rq-subs li {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 24px;
+    color: var(--ink-2);
+    display: flex;
+    gap: 24px;
+    align-items: baseline;
+  }
+  .rq-subs .n {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-4);
+    font-size: 18px;
+    min-width: 36px;
+  }
+
+  /* ---------- Slide 4: Task Family 2x2 ---------- */
+  .grid-2x2 {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 28px;
+    min-height: 0;
+  }
+  .grid-2x2 .cell {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .grid-2x2 .ph {
+    flex: 1;
+    min-height: 0;
+  }
+  .cell-cap {
+    margin-top: 14px;
+    font-size: 22px;
+    color: var(--ink);
+    font-weight: 500;
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .cell-cap .label {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-3);
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .footnote {
+    font-size: 18px;
+    font-style: italic;
+    color: var(--ink-3);
+    margin-top: 20px;
+  }
+
+  /* ---------- Slide 5: Flow + Matrix ---------- */
+  .s5-flow {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 28px;
+    flex-wrap: nowrap;
+  }
+  .flow-box {
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    padding: 14px 20px;
+    font-size: 18px;
+    color: var(--ink);
+    border-radius: 4px;
+    text-align: center;
+    line-height: 1.3;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .flow-arrow {
+    color: var(--ink-3);
+    font-size: 24px;
+    flex: 0 0 auto;
+  }
+  .flow-branch {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    flex: 1;
+  }
+  .flow-branch .flow-box { font-size: 17px; padding: 12px 10px; }
+  table.matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 19px;
+  }
+  table.matrix th, table.matrix td {
+    border: 1px solid var(--rule);
+    padding: 12px 14px;
+    text-align: left;
+    color: var(--ink-2);
+  }
+  table.matrix th {
+    background: var(--bg-soft);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 18px;
+  }
+  table.matrix td.row-h {
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--bg-soft);
+    width: 100px;
+  }
+  table.matrix td.cross {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--ink-2);
+  }
+  .total-pill {
+    display: inline-block;
+    background: var(--ink);
+    color: white;
+    padding: 6px 16px;
+    font-size: 18px;
+    font-weight: 500;
+    border-radius: 4px;
+    margin-top: 16px;
+  }
+
+  /* ---------- Slide 6: Architectures ---------- */
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 28px;
+    flex: 1;
+    min-height: 0;
+  }
+  .arch-card {
+    border: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--bg);
+  }
+  .arch-head {
+    padding: 18px 24px;
+    color: white;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .arch-head.act { background: var(--act); }
+  .arch-head.smolvla { background: var(--smolvla); }
+  .arch-head.pi05 { background: var(--pi05); }
+  .arch-body {
+    padding: 24px 28px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .arch-prop-label {
+    font-size: 14px;
+    color: var(--ink-4);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .arch-props {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 28px 0;
+  }
+  .arch-props li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 21px;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .arch-props li:last-child { border-bottom: 0; }
+  .arch-pred {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 2px solid var(--ink);
+  }
+  .arch-pred .lbl {
+    font-size: 14px;
+    color: var(--ink-4);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .arch-pred .txt {
+    font-size: 20px;
+    color: var(--ink);
+    line-height: 1.35;
+    font-style: italic;
+  }
+
+  /* ---------- Slide 7: Stat block ---------- */
+  .s7-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .stat-huge {
+    font-size: 200px;
+    font-weight: 600;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+  }
+  .stat-cap {
+    font-size: 22px;
+    color: var(--ink-3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-top: 12px;
+  }
+  .arch-counts {
+    margin-top: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 24px;
+  }
+  .arch-counts .row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .arch-counts .swatch {
+    width: 18px; height: 18px; border-radius: 3px;
+  }
+  .arch-counts .name { width: 140px; font-weight: 600; }
+  .arch-counts .ct { color: var(--ink-2); }
+  .arch-counts .excl { color: var(--ink-4); font-style: italic; }
+  .arch-counts .excl .name { color: var(--ink-3); }
+  .ckpt-axis {
+    margin-top: 24px;
+    padding: 28px;
+    border: 1px solid var(--rule);
+    background: var(--bg-soft);
+  }
+  .ckpt-axis .lbl {
+    font-size: 14px;
+    color: var(--ink-4);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .ckpt-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 18px;
+  }
+  .ckpt-stop {
+    flex: 1;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--ink-3);
+    padding: 10px 0;
+    border-top: 2px solid var(--ink-4);
+    position: relative;
+  }
+  .ckpt-stop.active {
+    color: var(--ink);
+    border-top-color: var(--ink);
+    font-weight: 600;
+  }
+  .ckpt-stop::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ink-4);
+  }
+  .ckpt-stop.active::before { background: var(--ink); }
+  .ckpt-callout {
+    font-size: 18px;
+    color: var(--ink-2);
+    line-height: 1.4;
+    margin-top: 8px;
+  }
+
+  /* ---------- Slide 8: iPad ---------- */
+  .s8-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 56px;
+    min-height: 0;
+  }
+  .s8-grid .ph { height: 100%; }
+  .feat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .feat-list li {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 24px;
+    color: var(--ink);
+    line-height: 1.35;
+    display: flex;
+    gap: 18px;
+    align-items: baseline;
+  }
+  .feat-list li:first-child { border-top: 1px solid var(--rule); }
+  .feat-list .n {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--act);
+    font-size: 18px;
+    font-weight: 600;
+    min-width: 30px;
+  }
+  .callout-strip {
+    margin-top: 28px;
+    padding: 22px 28px;
+    background: var(--bg-soft);
+    border-left: 3px solid var(--ink);
+    font-size: 22px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ---------- Slide 9: Protocol ---------- */
+  .s9-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    min-height: 0;
+  }
+  .protocol-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .protocol-block {
+    border: 1px solid var(--rule);
+    padding: 22px 28px;
+    background: var(--bg);
+  }
+  .protocol-label {
+    font-size: 14px;
+    color: var(--ink-4);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .protocol-val {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .kr-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .kr-cell {
+    padding: 24px;
+    text-align: center;
+    border: 1px solid var(--rule);
+  }
+  .kr-cell.k { background: #E8F0FB; }
+  .kr-cell.r { background: #FCEFD9; }
+  .kr-cell .big {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .kr-cell .lbl {
+    font-size: 18px;
+    color: var(--ink-2);
+    margin-top: 6px;
+  }
+  .formula {
+    background: var(--ink);
+    color: white;
+    padding: 22px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .formula .max { color: var(--ink-4); font-size: 16px; margin-top: 6px; display: block; }
+  .metric-row {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .metric-row:first-child { border-top: 1px solid var(--rule); }
+  .metric-name {
+    font-size: 14px;
+    color: var(--ink-4);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .metric-h {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .metric-d {
+    font-size: 20px;
+    color: var(--ink-2);
+  }
+
+  /* ---------- Slide 10/11/12/13/14/15 results layout ---------- */
+  .chart-grid-2 {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 48px;
+    min-height: 0;
+  }
+  .chart-grid-2 .ph { height: 100%; min-height: 480px; }
+  .callouts-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    justify-content: center;
+  }
+  .callout-card {
+    border: 1px solid var(--rule);
+    padding: 24px 28px;
+    background: var(--bg);
+  }
+  .callout-card .lbl {
+    font-size: 14px;
+    color: var(--ink-4);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .callout-card .v {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .callout-card.act .lbl { color: var(--act); }
+  .callout-card.smolvla .lbl { color: var(--smolvla); }
+  .callout-card.pi05 .lbl { color: var(--pi05); }
+  .callout-card .d {
+    font-size: 19px;
+    color: var(--ink-2);
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+  .interp {
+    margin-top: 28px;
+    font-size: 22px;
+    color: var(--ink-2);
+    font-style: italic;
+    line-height: 1.4;
+    text-wrap: pretty;
+    max-width: 1600px;
+  }
+
+  /* ---------- Slide 12 deltas ---------- */
+  .delta-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .delta-cell {
+    padding: 22px 24px;
+    border: 1px solid var(--rule);
+    border-top: 4px solid;
+  }
+  .delta-cell.act { border-top-color: var(--act); }
+  .delta-cell.smolvla { border-top-color: var(--smolvla); }
+  .delta-cell.pi05 { border-top-color: var(--pi05); }
+  .delta-cell .arch {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .delta-cell.act .arch { color: var(--act); }
+  .delta-cell.smolvla .arch { color: var(--smolvla); }
+  .delta-cell.pi05 .arch { color: var(--pi05); }
+  .delta-cell .nums {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .delta-cell .delta {
+    font-size: 22px;
+    color: var(--ink-3);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .delta-cell .delta.up { color: var(--smolvla); }
+
+  /* ---------- Slide 14 dual chart ---------- */
+  .chart-pair {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    min-height: 0;
+  }
+  .chart-pair .ph { height: 100%; min-height: 480px; }
+  .chart-cap {
+    font-size: 14px;
+    color: var(--ink-4);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .chart-block {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* ---------- Variant glossary strip ---------- */
+  .var-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 10px 16px;
+    margin-top: 16px;
+    background: var(--bg-soft);
+    border-left: 3px solid var(--ink-4);
+    font-size: 16px;
+    color: var(--ink-2);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .var-key b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Slide 17 threats: 3 cards ---------- */
+  .threats {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 28px;
+    min-height: 0;
+  }
+  .threat-card {
+    border: 1px solid var(--rule);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+  }
+  .threat-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--ink-4);
+    margin-bottom: 12px;
+  }
+  .threat-h {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 18px;
+    letter-spacing: -0.01em;
+  }
+  .threat-b {
+    font-size: 21px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+
+  /* ---------- Slide 18 Three findings ---------- */
+  .findings {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .finding-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 36px;
+    padding: 36px 0;
+    border-top: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .finding-row:last-child { border-bottom: 1px solid var(--rule); }
+  .finding-num {
+    font-size: 80px;
+    font-weight: 600;
+    color: var(--ink-4);
+    font-variant-numeric: tabular-nums;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .finding-h {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .finding-d {
+    font-size: 22px;
+    color: var(--ink-2);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.4;
+  }
+
+  /* ---------- Slide 19 roadmap ---------- */
+  .roadmap {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    align-content: center;
+    position: relative;
+  }
+  .roadmap::before {
+    content: '';
+    position: absolute;
+    top: 38px;
+    left: 5%;
+    right: 5%;
+    height: 2px;
+    background: var(--rule);
+    z-index: 0;
+  }
+  .milestone {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .milestone .dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--ink);
+    margin-bottom: 28px;
+  }
+  .milestone.next .dot { background: var(--act); }
+  .milestone.future .dot { background: var(--bg); border: 2px solid var(--ink-4); }
+  .milestone .when {
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-4);
+    margin-bottom: 8px;
+  }
+  .milestone .h {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 18px;
+    letter-spacing: -0.01em;
+  }
+  .milestone ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .milestone li {
+    font-size: 20px;
+    color: var(--ink-2);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    line-height: 1.35;
+  }
+  .milestone li:first-child { border-top: 1px solid var(--rule); }
+
+  /* ---------- Slide 20 Thank You ---------- */
+  .s20 {
+    align-items: center;
+    text-align: center;
+    padding-top: 80px;
+  }
+  .s20 h2 {
+    font-size: 96px;
+    font-weight: 600;
+    margin: 0 0 32px 0;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .s20 .ph {
+    width: 1100px;
+    height: 460px;
+    margin: 0 auto 36px;
+  }
+  .s20 .q {
+    font-size: 48px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 28px;
+    letter-spacing: -0.01em;
+  }
+  .s20 .ack {
+    font-size: 18px;
+    color: var(--ink-3);
+    line-height: 1.5;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* ---------- Chart SVG basics ---------- */
+  .chart-svg { width: 100%; height: 100%; display: block; }
+  .axis { stroke: #C5C9CF; stroke-width: 1; }
+  .gridline { stroke: #ECEEF1; stroke-width: 1; }
+  .axis-text { font-family: 'JetBrains Mono', monospace; font-size: 13px; fill: #6B7280; }
+  .axis-title { font-family: 'Inter', sans-serif; font-size: 14px; fill: #4B5563; font-weight: 500; }
+  .ph-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    fill: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .legend { font-family: 'Inter', sans-serif; font-size: 14px; fill: #4B5563; }
+
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+<!-- ============ SLIDE 1: TITLE ============ -->
+<section data-label="01 Title" class="s1">
+  <div class="left">
+    <div class="meta">CS839 · Topics in Advanced Robotics · UW–Madison</div>
+    <h1>Data Composition vs Architecture in Robot Imitation Learning</h1>
+    <div class="sub">When does narrow-task training transfer? A study across 16 datasets and 3 architectures.</div>
+    <div class="author">
+      <strong>Aswinkumar</strong> &nbsp;·&nbsp; CS839 Final Project &nbsp;·&nbsp; Prof. Hagenow &nbsp;·&nbsp; Spring 2026
+    </div>
+  </div>
+  <div class="right">
+    <div class="ph ph-media" style="background:#fff;"><img src="plots/setup_full.jpg" alt="Full robot setup" style="object-fit: contain;"/></div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 2: MOTIVATION ============ -->
+<section data-label="02 Motivation">
+  <h2 class="slide-title">If a human can do it after one demo, why can't the robot?</h2>
+  <div class="two-col">
+    <div class="col-with-cap">
+      <div class="col-cap">Single-sponge training, single-sponge inference</div>
+      <div class="ph ph-media"><img src="gifs/hero_st1_success.gif" alt="Single-sponge training, single-sponge inference"/></div>
+    </div>
+    <div class="col-with-cap">
+      <div class="col-cap">Single-sponge training, multi-sponge inference</div>
+      <div class="ph ph-media"><img src="gifs/robot_d1_fails_st2.gif" alt="Single-sponge training, multi-sponge inference"/></div>
+    </div>
+  </div>
+  <div class="pull-strip">Imitation learning policies do not generalize the way humans do. We measure how badly — and what data closes the gap.</div>
+  <div class="footer"><span class="num">02 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 3: RESEARCH QUESTION ============ -->
+<section data-label="03 Research Question" class="s3">
+  <h2 class="slide-title">Research Question</h2>
+  <div class="center">
+    <div class="rq-main">
+      <span class="star">★</span>When does narrow-task training transfer to harder task variants in imitation learning, and how do architecture and data composition interact to determine compositional generalization?
+    </div>
+    <ul class="rq-subs">
+      <li><span class="n">Q1</span><span>How do K (Known, 64 ep), R (Random, 64 ep), Mixed (50/50, 64 ep), Combined (100/100, 128 ep) dataset variants affect spatial generalization?</span></li>
+      <li><span class="n">Q2</span><span>Does training on one task generalize to harder task variants?</span></li>
+      <li><span class="n">Q3</span><span>Does architectural pretraining (SmolVLA, Pi0.5) close the human-robot generalization gap?</span></li>
+    </ul>
+  </div>
+  <div class="footer"><span class="num">03 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 4: TASK FAMILY ============ -->
+<section data-label="04 Task Family">
+  <h2 class="slide-title">Task Family — Compositional Decomposition</h2>
+  <style>
+    .s4-grid { flex: 1; display: grid; grid-template-columns: 1fr 380px; gap: 48px; min-height: 0; }
+    .st-block { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; }
+    .st-block .head { display: flex; gap: 14px; align-items: baseline; }
+    .st-block .tag { font-family: 'JetBrains Mono', monospace; color: var(--ink-3); font-size: 18px; font-weight: 600; }
+    .st-block .name { font-size: 22px; font-weight: 600; color: var(--ink); }
+    .st-block .desc { font-size: 17px; color: var(--ink-2); line-height: 1.4; }
+    .st-block ul.ds { list-style: none; padding: 0; margin: 4px 0 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; font-size: 16px; color: var(--ink-2); font-family: 'JetBrains Mono', monospace; }
+    .st-block ul.ds li::before { content: "• "; color: var(--ink-4); margin-right: 4px; }
+    .demo-stack { display: flex; flex-direction: column; gap: 12px; align-self: start; }
+    .demo-stack .demo { width: 380px; height: 220px; background: #000; border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .demo-stack .demo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .demo-stack .cap { font-size: 13px; color: var(--ink-4); font-family: 'JetBrains Mono', monospace; text-align: right; margin-top: -8px; }
+  </style>
+  <div class="s4-grid">
+    <div style="display:flex; flex-direction:column; justify-content:space-between; min-height:0;">
+      <div class="st-block">
+        <div class="head"><span class="tag">ST1</span><span class="name">Single sponge, clean</span></div>
+        <div class="desc">Pick the blue sponge and place it in the bowl.</div>
+        <ul class="ds"><li>D1-K (64)</li><li>D1-Mixed (64)</li><li>D1-R (64)</li><li>D1-Combined (128)</li></ul>
+      </div>
+      <div class="st-block">
+        <div class="head"><span class="tag">ST2</span><span class="name">Multi sponge, clean</span></div>
+        <div class="desc">Pick all blue sponges (2) and place them in the bowl.</div>
+        <ul class="ds"><li>D2-K (64)</li><li>D2-Mixed (64)</li><li>D2-R (64)</li><li>D2-Combined (128)</li></ul>
+      </div>
+      <div class="st-block">
+        <div class="head"><span class="tag">ST3</span><span class="name">Single sponge + distractors</span></div>
+        <div class="desc">Pick the blue sponge from a clutter of distractors.</div>
+        <ul class="ds"><li>D3-K (64)</li><li>D3-Mixed (64)</li><li>D3-R (64)</li><li>D3-Combined (128)</li></ul>
+      </div>
+      <div class="st-block">
+        <div class="head"><span class="tag">ST4</span><span class="name">Multi sponge + distractors (held out)</span></div>
+        <div class="desc">No training data collected — tested only via D_Universal as a pure compositional generalization probe.</div>
+      </div>
+    </div>
+    <div class="demo-stack">
+      <div class="demo"><img src="gifs/demo_task1.gif" alt="ST1 demo"/></div>
+      <div class="demo"><img src="gifs/demo_task2.gif" alt="ST2 demo"/></div>
+      <div class="demo"><img src="gifs/demo_task3.gif" alt="ST3 demo"/></div>
+    </div>
+  </div>
+  <div class="footnote">ST3 and ST4 evaluation in progress for final report (5 / 6).</div>
+  <div class="footer"><span class="num">04 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 5: DATASET RECIPES ============ -->
+<section data-label="05 Dataset Recipes">
+  <h2 class="slide-title">From Teleoperation to 16 Dataset Recipes</h2>
+
+  <!-- Headline stat -->
+  <div style="display:flex; gap:48px; align-items:baseline; padding:8px 0 18px; border-bottom:1px solid var(--rule);">
+    <div>
+      <div style="font-size:54px; font-weight:600; color:var(--ink); line-height:1; letter-spacing:-0.02em; font-variant-numeric:tabular-nums;">384</div>
+      <div style="font-size:16px; color:var(--ink-3); letter-spacing:0.08em; text-transform:uppercase; font-weight:500; margin-top:4px;">episodes collected</div>
+    </div>
+    <div>
+      <div style="font-size:54px; font-weight:600; color:var(--ink); line-height:1; letter-spacing:-0.02em; font-variant-numeric:tabular-nums;">5.7&nbsp;<span style="font-size:32px; color:var(--ink-2);">hours</span></div>
+      <div style="font-size:16px; color:var(--ink-3); letter-spacing:0.08em; text-transform:uppercase; font-weight:500; margin-top:4px;">total collection time</div>
+    </div>
+    <div style="font-size:14px; color:var(--ink-4); font-family:'JetBrains Mono',monospace; line-height:1.5; margin-left:auto; align-self:center;">
+      2.51 h video + 30 s/episode reset<br/>
+      128 episodes × 3 tasks (T1, T2, T3)
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:14px; padding:12px 16px; margin-top:14px; background:var(--bg-soft); border-left:3px solid #FF9D00; font-size:16px;">
+    <span style="background:#FF9D00; color:#000; font-weight:700; padding:3px 9px; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.04em;">🤗 HF</span>
+    <span style="color:var(--ink); font-weight:500;">Open dataset:&nbsp;</span>
+    <a href="https://huggingface.co/datasets/aswinkumar99/LeRobot-SO101-Pick-Place" style="color:var(--act); font-family:'JetBrains Mono',monospace; text-decoration:none; font-size:15px;">huggingface.co/datasets/aswinkumar99/LeRobot-SO101-Pick-Place</a>
+    <span style="margin-left:auto; color:var(--ink-3); font-style:italic; font-size:14px;">— Page 1, Trending LeRobot tag</span>
+  </div>
+
+  <!-- Compact dataset matrix (top) -->
+  <div style="display:flex; gap:32px; align-items:center; padding-top:14px; padding-bottom:14px; border-bottom:1px solid var(--rule);">
+    <table class="matrix" style="font-size:16px; flex:1;">
+      <thead>
+        <tr><th></th><th>K</th><th>R</th><th>Mixed</th><th>Combined</th><th>Cross-task</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="row-h">T1</td><td>D1-K</td><td>D1-R</td><td>D1-Mixed</td><td>D1-Combined</td>
+            <td class="cross" rowspan="3">D_Universal &nbsp;·&nbsp; D_D2D3<br/>D_D1D2-Half &nbsp;·&nbsp; D_D1D3-Half</td></tr>
+        <tr><td class="row-h">T2</td><td>D2-K</td><td>D2-R</td><td>D2-Mixed</td><td>D2-Combined</td></tr>
+        <tr><td class="row-h">T3</td><td>D3-K</td><td>D3-R</td><td>D3-Mixed</td><td>D3-Combined</td></tr>
+      </tbody>
+    </table>
+    <div class="total-pill">Total: 16 datasets</div>
+  </div>
+
+  <!-- 2x4 random sample grid (bottom) — fixed cell height so all 8 are identical -->
+  <div style="display:grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 165px; gap:10px; margin-top:18px;">
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_00_task1_ep028.gif" alt="ST1 sample"/></div>
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_01_task1_ep006.gif" alt="ST1 sample"/></div>
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_02_task1_ep070.gif" alt="ST1 sample"/></div>
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_03_task2_ep062.gif" alt="ST2 sample"/></div>
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_04_task2_ep057.gif" alt="ST2 sample"/></div>
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_05_task2_ep035.gif" alt="ST2 sample"/></div>
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_06_task3_ep026.gif" alt="ST3 sample"/></div>
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/sample_07_task3_ep022.gif" alt="ST3 sample"/></div>
+  </div>
+
+  <div class="footer"><span class="num">05 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 6: ARCHITECTURES ============ -->
+<section data-label="06 Architectures">
+  <h2 class="slide-title">Three Architectures, Three Design Philosophies</h2>
+
+  <style>
+    .arch-row { display: grid; grid-template-columns: 220px 1fr 1fr; gap: 36px; padding: 22px 0; align-items: start; border-top: 1px solid var(--rule); }
+    .arch-row:last-of-type { border-bottom: 1px solid var(--rule); }
+    .arch-id { display: flex; flex-direction: column; gap: 8px; }
+    .arch-id .badge { display: inline-block; color: white; padding: 8px 16px; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; align-self: flex-start; border-radius: 4px; }
+    .arch-id.act .badge { background: var(--act); }
+    .arch-id.smolvla .badge { background: var(--smolvla); }
+    .arch-id.pi05 .badge { background: var(--pi05); }
+    .arch-id .params { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--ink); font-weight: 600; }
+    .arch-id .backbone { font-size: 14px; color: var(--ink-3); line-height: 1.4; }
+    .arch-col h4 { font-size: 13px; color: var(--ink-4); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 8px 0; }
+    .arch-col ul { list-style: none; padding: 0; margin: 0; font-size: 17px; line-height: 1.45; color: var(--ink); }
+    .arch-col ul li { padding: 4px 0; }
+    .arch-col ul li::before { content: "• "; color: var(--ink-4); margin-right: 4px; }
+    .arch-col .pred { font-size: 16px; color: var(--ink-2); font-style: italic; line-height: 1.4; padding-top: 10px; margin-top: 10px; border-top: 1px dashed var(--rule); }
+  </style>
+
+  <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+    <!-- ACT -->
+    <div class="arch-row">
+      <div class="arch-id act">
+        <span class="badge">ACT</span>
+        <div class="params">~84 M params</div>
+        <div class="backbone">Transformer encoder–decoder + CVAE</div>
+      </div>
+      <div class="arch-col">
+        <h4>Properties</h4>
+        <ul>
+          <li>Action Chunking Transformer (Zhao et al., ALOHA)</li>
+          <li>Trained from scratch — no visual or language priors</li>
+          <li>Predicts a horizon of future actions per observation</li>
+          <li>CVAE smooths multi-modal demonstrations</li>
+        </ul>
+      </div>
+      <div class="arch-col">
+        <h4>Fine-tuning recipe <span style="color:var(--ink-4); font-weight:400; font-size:11px;">(cloud_training/train_one.sh)</span></h4>
+        <ul>
+          <li><code>--policy.type=act</code> — trained from scratch</li>
+          <li>60 000 steps · batch 32 · save every 15 000</li>
+          <li>Cameras: overhead + wrist (native)</li>
+        </ul>
+        <div class="pred"><b>Prediction:</b> Should plateau without data scale.</div>
+      </div>
+    </div>
+
+    <!-- SmolVLA -->
+    <div class="arch-row">
+      <div class="arch-id smolvla">
+        <span class="badge">SmolVLA</span>
+        <div class="params">~450 M params</div>
+        <div class="backbone">SmolVLM-2 (256 M) + action expert (~200 M)</div>
+      </div>
+      <div class="arch-col">
+        <h4>Properties</h4>
+        <ul>
+          <li>Hugging Face open VLA, released 2025</li>
+          <li>Pretrained on community LeRobot datasets</li>
+          <li>VLM backbone provides language + visual grounding</li>
+          <li>Designed for small-data downstream fine-tunes</li>
+        </ul>
+      </div>
+      <div class="arch-col">
+        <h4>Fine-tuning recipe <span style="color:var(--ink-4); font-weight:400; font-size:11px;">(cloud_training/train_one.sh)</span></h4>
+        <ul>
+          <li><code>--policy.path=lerobot/smolvla_base</code></li>
+          <li>20 000 steps · batch 128 (-all) / 64 (splits) · save every 5 000</li>
+          <li>Cameras renamed: overhead→camera1, wrist→camera2</li>
+        </ul>
+        <div class="pred"><b>Prediction:</b> Should benefit from limited data via VLM grounding.</div>
+      </div>
+    </div>
+
+    <!-- Pi05 -->
+    <div class="arch-row">
+      <div class="arch-id pi05">
+        <span class="badge">Pi0.5</span>
+        <div class="params">~3.4 B params</div>
+        <div class="backbone">PaliGemma (3 B) + flow-matching action head</div>
+      </div>
+      <div class="arch-col">
+        <h4>Properties</h4>
+        <ul>
+          <li>Physical Intelligence π₀.₅ (2025)</li>
+          <li>Flow-matching policy on continuous actions</li>
+          <li>Trained cross-embodiment on diverse robots</li>
+          <li>High-level VLA reasoning + low-level expert</li>
+        </ul>
+      </div>
+      <div class="arch-col">
+        <h4>Fine-tuning recipe <span style="color:var(--ink-4); font-weight:400; font-size:11px;">(cloud_training/train_one.sh)</span></h4>
+        <ul>
+          <li><code>--policy.path=lerobot/pi05_base</code> · BF16 · trained on H200</li>
+          <li><code>train_expert_only=true</code> · <code>freeze_vision_encoder=true</code></li>
+          <li>20 000 steps · batch 32 · LR 5e-5 · 1 000-step warmup</li>
+          <li>Cameras renamed: overhead→base_0_rgb, wrist→right_wrist_0_rgb (+1 empty)</li>
+        </ul>
+        <div class="pred"><b>Prediction:</b> Robust priors but higher inference cost.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">DiT excluded after pre-flight — failed in-distribution evaluation. Param counts are approximate.</div>
+  <div class="footer"><span class="num">06 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 7: TRAINING STRUCTURE ============ -->
+<section data-label="07 Training Structure">
+  <h2 class="slide-title">Training Structure — 202 GPU-hours on Cloud Infrastructure</h2>
+
+  <!-- Headline GPU-hour bar -->
+  <div style="display:flex; gap:24px; align-items:stretch; padding:14px 0 22px; border-bottom:1px solid var(--rule);">
+    <div style="display:flex; flex-direction:column; justify-content:center;">
+      <div style="font-size:96px; font-weight:600; color:var(--ink); line-height:0.95; letter-spacing:-0.03em; font-variant-numeric:tabular-nums;">202</div>
+      <div style="font-size:18px; color:var(--ink-3); letter-spacing:0.08em; text-transform:uppercase; font-weight:500; margin-top:6px;">total GPU-hours</div>
+    </div>
+    <!-- Stacked bar visualization (per-model averages) -->
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+      <div style="display:flex; height:46px; border-radius:4px; overflow:hidden; border:1px solid var(--rule);">
+        <div style="background:var(--act); flex:48; display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:16px;">ACT &nbsp;48&nbsp;h</div>
+        <div style="background:var(--smolvla); flex:72; display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:16px;">SmolVLA &nbsp;72&nbsp;h</div>
+        <div style="background:var(--pi05); flex:46; display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:16px;">Pi0.5 &nbsp;46&nbsp;h</div>
+        <div style="background:#9CA3AF; flex:36; display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:14px;">DiT (excluded) 36 h</div>
+      </div>
+      <div style="display:flex; gap:14px; margin-top:8px; font-size:14px; color:var(--ink-4); font-family:'JetBrains Mono',monospace;">
+        <span>Per-model averages: ACT ≈ 3 h × 16 = 48 h · SmolVLA ≈ 4.5 h × 16 = 72 h · Pi0.5 ≈ 6.6 h × 7 = 46 h · DiT ≈ 9 h × 4 = 36 h.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two cluster cards -->
+  <div style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap:36px; padding:28px 0; min-height:0;">
+    <!-- Cluster 1: Blackwell pool -->
+    <div style="border:1px solid var(--rule); padding:28px; display:flex; flex-direction:column;">
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px;">
+        <span style="background:var(--act); color:white; padding:4px 10px; border-radius:3px; font-size:14px; font-weight:600; letter-spacing:0.04em;">ACT</span>
+        <span style="background:var(--smolvla); color:white; padding:4px 10px; border-radius:3px; font-size:14px; font-weight:600; letter-spacing:0.04em;">SmolVLA</span>
+      </div>
+      <div style="font-size:28px; font-weight:600; color:var(--ink); line-height:1.2; letter-spacing:-0.01em;">6 × RTX PRO 6000 Blackwell</div>
+      <div style="font-size:18px; color:var(--ink-2); margin-top:6px;">parallel training pool</div>
+
+      <div style="display:flex; gap:32px; margin-top:24px; padding:18px 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);">
+        <div>
+          <div style="font-size:14px; color:var(--ink-4); letter-spacing:0.08em; text-transform:uppercase; font-weight:600;">Wall-clock</div>
+          <div style="font-size:32px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:2px;">26 h</div>
+        </div>
+        <div style="font-size:32px; color:var(--ink-4); align-self:center;">×</div>
+        <div>
+          <div style="font-size:14px; color:var(--ink-4); letter-spacing:0.08em; text-transform:uppercase; font-weight:600;">GPUs</div>
+          <div style="font-size:32px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:2px;">6</div>
+        </div>
+        <div style="font-size:32px; color:var(--ink-4); align-self:center;">=</div>
+        <div>
+          <div style="font-size:14px; color:var(--ink-4); letter-spacing:0.08em; text-transform:uppercase; font-weight:600;">GPU-hours</div>
+          <div style="font-size:32px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:2px;">156 h</div>
+        </div>
+      </div>
+
+      <ul style="list-style:none; padding:0; margin:18px 0 0 0; font-size:17px; color:var(--ink-2); line-height:1.5;">
+        <li style="padding:4px 0;">• 32 models &mdash; <span style="color:var(--act); font-weight:600;">ACT</span> × 16 (~3 h each) + <span style="color:var(--smolvla); font-weight:600;">SmolVLA</span> × 16 (~4.5 h each)</li>
+        <li style="padding:4px 0;">• Docker image: <code>huggingface/lerobot-gpu</code></li>
+        <li style="padding:4px 0;">• Launched via <code>train_matrix.sh all</code> &amp; <code>train_combo_matrix.sh</code></li>
+        <li style="padding:4px 0;">• ACT: 60 K steps / SmolVLA: 20 K steps</li>
+      </ul>
+    </div>
+
+    <!-- Cluster 2: H100 -->
+    <div style="border:1px solid var(--rule); padding:28px; display:flex; flex-direction:column;">
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px;">
+        <span style="background:var(--pi05); color:white; padding:4px 10px; border-radius:3px; font-size:14px; font-weight:600; letter-spacing:0.04em;">Pi0.5</span>
+      </div>
+      <div style="font-size:28px; font-weight:600; color:var(--ink); line-height:1.2; letter-spacing:-0.01em;">NVIDIA H200</div>
+      <div style="font-size:18px; color:var(--ink-2); margin-top:6px;">single-GPU run for the 3.4&nbsp;B-param model</div>
+
+      <div style="display:flex; gap:32px; margin-top:24px; padding:18px 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);">
+        <div>
+          <div style="font-size:14px; color:var(--ink-4); letter-spacing:0.08em; text-transform:uppercase; font-weight:600;">Wall-clock</div>
+          <div style="font-size:32px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:2px;">46 h</div>
+        </div>
+        <div style="font-size:32px; color:var(--ink-4); align-self:center;">=</div>
+        <div>
+          <div style="font-size:14px; color:var(--ink-4); letter-spacing:0.08em; text-transform:uppercase; font-weight:600;">GPU-hours</div>
+          <div style="font-size:32px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; margin-top:2px;">46 h</div>
+        </div>
+      </div>
+
+      <ul style="list-style:none; padding:0; margin:18px 0 0 0; font-size:17px; color:var(--ink-2); line-height:1.5;">
+        <li style="padding:4px 0;">• 7 models (3 base × <code>-all</code> + 4 combo)</li>
+        <li style="padding:4px 0;">• <code>--policy.dtype=bfloat16</code> · batch size 32</li>
+        <li style="padding:4px 0;">• <code>train_expert_only=true</code>, vision encoder frozen</li>
+        <li style="padding:4px 0;">• 20 K steps · 1 K-step warmup · LR 5e-5</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Inference rates strip -->
+  <div style="display:flex; gap:0; align-items:stretch; margin-top:14px; border:1px solid var(--rule);">
+    <div style="padding:14px 22px; background:var(--bg-soft); border-right:1px solid var(--rule); display:flex; flex-direction:column; justify-content:center; min-width:240px;">
+      <div style="font-size:14px; color:var(--ink-4); letter-spacing:0.08em; text-transform:uppercase; font-weight:600;">Inference</div>
+      <div style="font-size:20px; color:var(--ink); font-weight:600; margin-top:2px;">RTX 4090 Mobile</div>
+      <div style="font-size:14px; color:var(--ink-3); margin-top:2px;">on-robot laptop</div>
+    </div>
+    <div style="flex:1; display:flex; align-items:center; justify-content:space-around; padding:14px 22px;">
+      <div style="text-align:center;">
+        <div style="font-size:13px; color:var(--act); font-weight:600; letter-spacing:0.08em; text-transform:uppercase;">ACT</div>
+        <div style="font-size:36px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1.1;">30&nbsp;<span style="font-size:18px; color:var(--ink-3);">Hz</span></div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:13px; color:var(--smolvla); font-weight:600; letter-spacing:0.08em; text-transform:uppercase;">SmolVLA</div>
+        <div style="font-size:36px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1.1;">6&nbsp;<span style="font-size:18px; color:var(--ink-3);">Hz</span></div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:13px; color:var(--pi05); font-weight:600; letter-spacing:0.08em; text-transform:uppercase;">Pi0.5</div>
+        <div style="font-size:36px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1.1;">5&nbsp;<span style="font-size:18px; color:var(--ink-3);">Hz</span></div>
+      </div>
+      <div style="font-size:14px; color:var(--ink-2); font-style:italic; max-width:260px; line-height:1.4;">
+        ~6× speed gap between ACT and the VLA policies — relevant to the time-to-success results.
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote" style="margin-top:10px;">
+    DiT × 4 attempted but excluded after pre-flight (zero in-distribution success). All other 39 models converged.
+  </div>
+  <div class="footer"><span class="num">07 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 8: PROTOCOL ============ -->
+<section data-label="08 Protocol">
+  <h2 class="slide-title">Evaluation Protocol &amp; Dual Metrics</h2>
+
+  <div style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap:48px; min-height:0;">
+    <!-- Left: marked-spots image + K/R explainer -->
+    <div style="display:flex; flex-direction:column; min-height:0;">
+      <div style="flex:1; min-height:0; background:#0a0a0a; border:1px solid var(--rule); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <img src="plots/setup_marked.png" alt="6 marked positions on the bench"
+             style="max-width:100%; max-height:100%; object-fit:contain; display:block;"/>
+      </div>
+      <div style="display:flex; gap:14px; margin-top:14px;">
+        <div class="kr-cell k" style="flex:1; padding:18px 20px;">
+          <div style="display:flex; align-items:baseline; gap:10px; justify-content:center;">
+            <div class="big" style="font-size:32px;">8</div>
+            <div style="font-size:14px; color:var(--ink-3); font-family:'JetBrains Mono',monospace;">×&nbsp;1.0</div>
+          </div>
+          <div class="lbl">Known &mdash; 6 marked positions on the bench</div>
+        </div>
+        <div class="kr-cell r" style="flex:1; padding:18px 20px;">
+          <div style="display:flex; align-items:baseline; gap:10px; justify-content:center;">
+            <div class="big" style="font-size:32px;">8</div>
+            <div style="font-size:14px; color:var(--pi05); font-family:'JetBrains Mono',monospace; font-weight:600;">×&nbsp;1.5</div>
+          </div>
+          <div class="lbl">Random &mdash; uniformly placed on the bench</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: scoring formula + metrics -->
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div class="protocol-block">
+        <div class="protocol-label">Per cell</div>
+        <div class="protocol-val">16 trials &nbsp;<span style="color:var(--ink-3); font-size:18px; font-weight:500;">= 8 Known + 8 Random</span></div>
+      </div>
+
+      <div class="formula">
+        Score = (K_wins × 1.0) + (R_wins × 1.5)
+        <span class="max">Maximum 20</span>
+      </div>
+
+      <div style="font-size:18px; color:var(--ink-2); line-height:1.5; padding:0 4px;">
+        Random positions are weighted <b>1.5×</b> to penalize position overfitting:
+        a model that memorizes the marked spots will score 8 / 20, while one that
+        generalizes earns the full 20.
+      </div>
+
+      <hr class="hr" />
+
+      <div class="metric-row" style="border-top:0; padding-top:0;">
+        <div class="metric-name">Metric 01</div>
+        <div class="metric-h">Success rate (out of 20)</div>
+        <div class="metric-d">Measures <em>what</em> succeeds.</div>
+      </div>
+      <div class="metric-row" style="padding-top:14px;">
+        <div class="metric-name">Metric 02</div>
+        <div class="metric-h">Median time-to-success</div>
+        <div class="metric-d">Measures <em>how decisively</em>.</div>
+      </div>
+
+      <div class="footnote" style="margin:0;">Identical pre-generated scenes across all models.</div>
+    </div>
+  </div>
+
+  <div class="footer"><span class="num">08 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 9: iPad ============ -->
+<section data-label="09 iPad Dashboard">
+  <h2 class="slide-title">Custom iPad Dashboard for Field Evaluation</h2>
+  <div class="s8-grid">
+    <div class="ph ph-media" style="background:#000;"><img src="gifs/dashboard_in_use.gif" alt="iPad dashboard in use" style="object-fit: contain;"/></div>
+    <div>
+      <ul class="feat-list">
+        <li><span class="n">01</span><span>Launch evaluations from beside the robot</span></li>
+        <li><span class="n">02</span><span>One-tap failure-mode tagging (G / C / S / P / D / O)</span></li>
+        <li><span class="n">03</span><span>Finish-episode-early button for fast successes</span></li>
+        <li><span class="n">04</span><span>Eliminates manual CSV bookkeeping &amp; timing inconsistency</span></li>
+      </ul>
+      <div class="callout-strip">Enabled <strong>480 rollouts</strong> in a weekend without transcription errors.</div>
+    </div>
+  </div>
+  <div class="footer"><span class="num">09 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 10: ST1 K vs R ============ -->
+<section data-label="10 ST1 K vs R">
+  <h2 class="slide-title">ST1 Result 1: Marked Positions Are a Trap</h2>
+  <div class="chart-grid-2">
+    <div class="ph ph-chart-real"><img src="plots/st1_k_vs_r_overfit.png" alt="ST1 K vs R"/></div>
+    <div class="callouts-stack">
+      <div class="callout-card act">
+        <div class="lbl">D1-K → ACT</div>
+        <div class="v">10 / 20</div>
+      </div>
+      <div class="callout-card smolvla">
+        <div class="lbl">D1-K → SmolVLA</div>
+        <div class="v">10 / 20</div>
+        <div class="d">Identical score across architectures — the failure is in the data, not the model.</div>
+      </div>
+    </div>
+  </div>
+  <div class="interp">K-only training memorizes pixel→action shortcuts rather than learning a sponge-grasping primitive.</div>
+  <div class="var-key"><span><b>K</b> = Known (64 ep)</span><span><b>R</b> = Random (64 ep)</span><span><b>Mixed</b> = 50/50 (64 ep)</span><span><b>Combined</b> = 100/100 (128 ep)</span></div>
+  <div class="footer"><span class="num">10 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 11: ST1 Universal ============ -->
+<section data-label="11 ST1 Universal">
+  <h2 class="slide-title">ST1 Result 2: Cross-Task Data Helps — Differently</h2>
+  <div class="chart-grid-2">
+    <div class="ph ph-chart-real"><img src="plots/st1_score_by_dataset.png" alt="ST1 score by dataset"/></div>
+    <div class="callouts-stack">
+      <div class="callout-card act">
+        <div class="lbl">ACT — D1+D3-Half</div>
+        <div class="v">20 / 20</div>
+        <div class="d">→ distractor data helps ACT.</div>
+      </div>
+      <div class="callout-card smolvla">
+        <div class="lbl">SmolVLA — D1+D2-Half</div>
+        <div class="v">20 / 20</div>
+        <div class="d">→ multi-object data helps SmolVLA.</div>
+      </div>
+    </div>
+  </div>
+  <div class="interp">Architectures differ in which auxiliary data they need. SmolVLA's VLM grounding handles distractors implicitly; ACT must see them explicitly.</div>
+  <div class="var-key"><span><b>K</b> = Known (64 ep)</span><span><b>R</b> = Random (64 ep)</span><span><b>Mixed</b> = 50/50 (64 ep)</span><span><b>Combined</b> = 100/100 (128 ep)</span></div>
+  <div class="footer"><span class="num">11 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 13: ST2 Half-Mix ============ -->
+<section data-label="13 ST2 Half-Mix">
+  <h2 class="slide-title">ST2 Result: Half-Mix Captures Most of the Universal Benefit</h2>
+  <div class="chart-grid-2">
+    <div class="ph ph-chart-real"><img src="plots/st2_full_results.png" alt="ST2 full results"/></div>
+    <div class="callouts-stack">
+      <div class="callout-card">
+        <div class="lbl">D1+D2-Half — ST2 score</div>
+        <div style="display:flex; flex-direction:column; gap:14px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--rule); padding-bottom:10px;">
+            <span style="color:var(--act); font-weight:600; font-size:20px;">ACT</span>
+            <span style="font-size:30px; font-weight:600; font-variant-numeric:tabular-nums;">18.5 / 20</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--rule); padding-bottom:10px;">
+            <span style="color:var(--smolvla); font-weight:600; font-size:20px;">SmolVLA</span>
+            <span style="font-size:30px; font-weight:600; font-variant-numeric:tabular-nums;">13.0 / 20</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="color:var(--pi05); font-weight:600; font-size:20px;">Pi0.5</span>
+            <span style="font-size:30px; font-weight:600; font-variant-numeric:tabular-nums;">17.0 / 20</span>
+          </div>
+        </div>
+        <div class="d" style="margin-top:18px;">Adding only 64 multi-sponge episodes to D1 nearly closes the gap to full Universal training.</div>
+      </div>
+    </div>
+  </div>
+  <div class="interp">A small amount of task-specific data is qualitatively different from no task-specific data. The compositional threshold is low.</div>
+  <div class="var-key"><span><b>K</b> = Known (64 ep)</span><span><b>R</b> = Random (64 ep)</span><span><b>Mixed</b> = 50/50 (64 ep)</span><span><b>Combined</b> = 100/100 (128 ep)</span></div>
+  <div class="footer"><span class="num">12 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 14: TIME-TO-SUCCESS ============ -->
+<section data-label="14 Time to Success">
+  <h2 class="slide-title">Better Data → Faster, More Decisive Policies</h2>
+  <div class="chart-pair">
+    <div class="chart-block">
+      <div class="chart-cap">ST1 — median time-to-success</div>
+      <div class="ph ph-chart-real"><img src="plots/time_to_success_st1.png" alt="Time to success ST1"/></div>
+    </div>
+    <div class="chart-block">
+      <div class="chart-cap">ST2 — median time-to-success</div>
+      <div class="ph ph-chart-real"><img src="plots/time_to_success_st2.png" alt="Time to success ST2"/></div>
+    </div>
+  </div>
+  <div class="callout-strip" style="margin-top: 28px; display:flex; gap:48px; flex-wrap:wrap;">
+    <div><strong style="color:var(--smolvla);">SmolVLA – D_Universal:</strong> ST1 in 6 s &nbsp;|&nbsp; ST2 in 71 s</div>
+    <div><strong style="color:var(--smolvla);">SmolVLA – D1-Combined:</strong> ST1 in 24 s &nbsp;|&nbsp; ST2 fails</div>
+  </div>
+  <div class="interp">Broader training yields more decisive trajectories — the model knows which sponge to grasp first.</div>
+  <div class="var-key"><span><b>K</b> = Known (64 ep)</span><span><b>R</b> = Random (64 ep)</span><span><b>Mixed</b> = 50/50 (64 ep)</span><span><b>Combined</b> = 100/100 (128 ep)</span></div>
+  <div class="footer"><span class="num">13 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 15: FAILURE MODE STACKED ============ -->
+<section data-label="15 Failure Modes">
+  <h2 class="slide-title">Failure Modes Track Training-Data Gaps</h2>
+  <div class="chart-grid-2">
+    <div class="ph ph-chart-real"><img src="plots/failure_modes_stacked.png" alt="Failure modes stacked"/></div>
+    <div>
+      <div class="chart-cap">Failure code legend</div>
+      <ul style="list-style:none; padding:0; margin:0; font-size:21px;">
+        <li style="padding:14px 0; border-bottom:1px solid var(--rule); display:flex; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-weight:600; min-width:34px; color:var(--ink);">G</span><span>Grasp miss</span></li>
+        <li style="padding:14px 0; border-bottom:1px solid var(--rule); display:flex; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-weight:600; min-width:34px; color:var(--ink);">S</span><span>Missed sponge</span></li>
+        <li style="padding:14px 0; border-bottom:1px solid var(--rule); display:flex; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-weight:600; min-width:34px; color:var(--ink);">C</span><span>Wrong color</span></li>
+        <li style="padding:14px 0; border-bottom:1px solid var(--rule); display:flex; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-weight:600; min-width:34px; color:var(--ink);">P</span><span>Placement</span></li>
+        <li style="padding:14px 0; border-bottom:1px solid var(--rule); display:flex; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-weight:600; min-width:34px; color:var(--ink);">D</span><span>Drop mid-trajectory</span></li>
+        <li style="padding:14px 0; border-bottom:1px solid var(--rule); display:flex; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-weight:600; min-width:34px; color:var(--ink);">O</span><span>Other</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="interp">ST1 failures are nearly all G (grasp) — a hand-eye coordination / visual alignment problem, not a motor one. ST2 introduces D (drop) and S (missed sponge) — chaining and decisiveness problems that emerge when multi-object behavior is required.</div>
+  <div class="var-key"><span><b>K</b> = Known (64 ep)</span><span><b>R</b> = Random (64 ep)</span><span><b>Mixed</b> = 50/50 (64 ep)</span><span><b>Combined</b> = 100/100 (128 ep)</span></div>
+  <div class="footer"><span class="num">14 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 15: FINDINGS + THREATS ============ -->
+<section data-label="15 Findings & Threats">
+  <h2 class="slide-title">Three Findings &mdash; and What Could Still Be Wrong</h2>
+
+  <div style="flex:1; display:grid; grid-template-columns: 1.25fr 1fr; gap:48px; min-height:0;">
+    <!-- Findings -->
+    <div style="display:flex; flex-direction:column; min-height:0;">
+      <div class="arch-prop-label" style="margin-bottom: 14px;">Findings</div>
+      <div class="findings" style="flex:1;">
+        <div class="finding-row" style="padding: 22px 0;">
+          <div class="finding-num">01</div>
+          <div>
+            <div class="finding-h" style="font-size:26px;">Marked-position training severely overfits.</div>
+            <div class="finding-d" style="font-size:18px;">D1-K models score 10 / 20 across both ACT and SmolVLA.</div>
+          </div>
+        </div>
+        <div class="finding-row" style="padding: 22px 0;">
+          <div class="finding-num">02</div>
+          <div>
+            <div class="finding-h" style="font-size:26px;">Single-task training cannot compose.</div>
+            <div class="finding-d" style="font-size:18px;">D1-Combined → ST2: 2.5 – 7.0 / 20 across all architectures.</div>
+          </div>
+        </div>
+        <div class="finding-row" style="padding: 22px 0;">
+          <div class="finding-num">03</div>
+          <div>
+            <div class="finding-h" style="font-size:26px;">Cross-task data improves both success rate and speed.</div>
+            <div class="finding-d" style="font-size:18px;">D_Universal completes ST1 in 1 / 4 the time of D1-Combined.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Threats -->
+    <div style="display:flex; flex-direction:column; min-height:0;">
+      <div class="arch-prop-label" style="margin-bottom: 14px;">Threats to validity</div>
+      <div style="display:flex; flex-direction:column; gap:16px; flex:1;">
+        <div class="threat-card" style="padding:20px 24px;">
+          <div class="threat-num">01</div>
+          <div class="threat-h" style="font-size:22px; margin-bottom:10px;">Statistical</div>
+          <div class="threat-b" style="font-size:17px;">8 trials per K / R split → ~±35 % binomial CI per individual cell. Mitigated by reporting cross-cell patterns.</div>
+        </div>
+        <div class="threat-card" style="padding:20px 24px;">
+          <div class="threat-num">02</div>
+          <div class="threat-h" style="font-size:22px; margin-bottom:10px;">Checkpoint bias</div>
+          <div class="threat-b" style="font-size:17px;">Single 20 K checkpoint may favor faster-converging architectures. Pi0.5 / SmolVLA may be undertrained relative to potential.</div>
+        </div>
+        <div class="threat-card" style="padding:20px 24px;">
+          <div class="threat-num">03</div>
+          <div class="threat-h" style="font-size:22px; margin-bottom:10px;">Scene generalization</div>
+          <div class="threat-b" style="font-size:17px;">ST3 distractor configurations differ structurally from training (we cannot replicate exact arrangements) — by design, but worth noting.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer"><span class="num">15 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 19: ROADMAP ============ -->
+<section data-label="19 Whats Next">
+  <h2 class="slide-title">What's Next</h2>
+  <div class="roadmap">
+    <div class="milestone next">
+      <div class="dot"></div>
+      <div class="when">Next — 5 / 6</div>
+      <div class="h">Final Report</div>
+      <ul>
+        <li>ST3 distractor robustness</li>
+        <li>ST4 compositional test</li>
+        <li>Full failure-mode atlas</li>
+      </ul>
+    </div>
+    <div class="milestone">
+      <div class="dot"></div>
+      <div class="when">Follow-up</div>
+      <div class="h">Checkpoint Dynamics</div>
+      <ul>
+        <li>5K / 10K / 15K / 20K analysis</li>
+        <li>Across architectures</li>
+        <li>Training-time efficiency comparison</li>
+      </ul>
+    </div>
+    <div class="milestone future">
+      <div class="dot"></div>
+      <div class="when">Future</div>
+      <div class="h">Beyond This Study</div>
+      <ul>
+        <li>Architecture × data full grid</li>
+        <li>Lighting robustness</li>
+        <li>Real deployment evaluation</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span class="num">16 / 17</span><span>Aswinkumar &nbsp;|&nbsp; CS839 Final Project &nbsp;|&nbsp; Spring 2026</span></div>
+</section>
+
+<!-- ============ SLIDE 20: THANK YOU ============ -->
+<section data-label="20 Thank You / Eval Gallery" class="s20" style="padding:0; overflow:hidden; background:#0b0b0d;">
+  <iframe src="eval_gallery/index.html"
+          allow="autoplay; fullscreen"
+          style="position:absolute; inset:0; width:100%; height:100%; border:0; display:block;"
+          title="Eval Gallery"></iframe>
+</section>
+
+</deck-stage>
+
+<script>
+  // The eval_gallery iframe on the last slide forwards nav keys back here via
+  // postMessage. Re-dispatch them so deck-stage's keydown listener handles them.
+  window.addEventListener('message', (e) => {
+    if (!e.data || e.data.type !== 'gallery-nav-key') return;
+    const ev = new KeyboardEvent('keydown', { key: e.data.key, bubbles: true });
+    window.dispatchEvent(ev);
+  });
+</script>
+
+</body>
+</html>

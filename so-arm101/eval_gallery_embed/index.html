@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SO-ARM101 — eval gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0b0d;
+      --fg: #e8e8ea;
+      --dim: #5a5a60;
+      --act: #2E5EAA;
+      --smolvla: #3D8B5C;
+      --pi05: #D97706;
+      --ok: #4ade80;
+      --fail: #f87171;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: var(--bg); color: var(--fg);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+    #status {
+      position: fixed; top: 56px; left: 50%; transform: translateX(-50%);
+      font: 600 11px/1.2 'JetBrains Mono', monospace;
+      color: var(--dim); letter-spacing: 0.05em;
+      z-index: 100; pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+    #title {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+      font: 700 26px/1 'JetBrains Mono', monospace;
+      letter-spacing: 0.18em;
+      color: var(--fg);
+      z-index: 100; pointer-events: none;
+      text-shadow: 0 2px 14px rgba(0,0,0,0.95), 0 0 30px rgba(0,0,0,0.85);
+      mix-blend-mode: normal;
+    }
+    #title .accent { color: var(--pi05); }
+
+    /* Thank-you overlay: fades in immediately, holds 6s, fades out 1.5s */
+    #thanks {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 200; pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%);
+    }
+    #thanks .big {
+      font: 800 96px/1 'JetBrains Mono', monospace;
+      letter-spacing: 0.16em;
+      color: var(--fg);
+      text-shadow: 0 4px 30px rgba(0,0,0,0.95), 0 0 60px rgba(0,0,0,0.7);
+      margin-bottom: 18px;
+    }
+    #thanks .sub {
+      font: 600 24px/1 'JetBrains Mono', monospace;
+      letter-spacing: 0.22em;
+      color: var(--pi05);
+      text-shadow: 0 2px 18px rgba(0,0,0,0.95);
+      margin-bottom: 38px;
+    }
+    #thanks .credits {
+      font: 700 22px/1.4 'Inter', sans-serif;
+      letter-spacing: 0.05em;
+      color: var(--fail);
+      text-shadow: 0 2px 18px rgba(0,0,0,0.95), 0 0 26px rgba(0,0,0,0.85);
+      max-width: 760px; text-align: center;
+    }
+    #thanks .accent { color: var(--pi05); }
+    #wall {
+      display: grid; gap: 2px;
+      width: 100vw; height: 100vh;
+      padding: 2px;
+      background: #000;
+    }
+    .tile {
+      position: relative; overflow: hidden; background: #000;
+      aspect-ratio: 16/9;
+      filter: grayscale(1) brightness(0.5) contrast(0.92);
+      transition: filter 600ms ease, transform 600ms ease, box-shadow 600ms ease;
+      will-change: filter, transform;
+    }
+    .tile video,
+    .tile .poster {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .tile .poster { z-index: 1; }
+    /* lo-res ambient layer: always playing in background */
+    .tile video.bg { z-index: 2; }
+    /* hi-res spotlight layer: shows only when .hot */
+    .tile video.fg { z-index: 3; opacity: 0; transition: opacity 350ms ease; }
+    .tile.hot video.fg { opacity: 1; }
+
+    .tile.hot {
+      filter: none;
+      transform: scale(1.85);
+      z-index: 30;
+      box-shadow: 0 0 0 2px var(--accent), 0 18px 60px rgba(0,0,0,0.85);
+    }
+    .tile[data-policy="ACT"]     { --accent: var(--act); }
+    .tile[data-policy="SmolVLA"] { --accent: var(--smolvla); }
+    .tile[data-policy="Pi05"]    { --accent: var(--pi05); }
+
+    .lbl {
+      position: absolute; z-index: 5;
+      font: 600 12px/1 'JetBrains Mono', monospace;
+      color: var(--fg);
+      padding: 2px 4px;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      transition: opacity 350ms ease;
+      pointer-events: none;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      max-width: calc(100% - 4px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tile.hot .lbl { opacity: 1; }
+    .lbl.tl { top: 2px; left: 2px; }
+    /* variant: sits right below the top-left subtask label, much smaller */
+    .lbl.tl-sub { top: 20px; left: 2px;
+                  font: 600 7px/1 'JetBrains Mono', monospace;
+                  letter-spacing: 0.03em;
+                  padding: 1px 3px;
+                  color: var(--accent);
+                  background: rgba(0,0,0,0.50); }
+    .lbl.tr { top: 2px; right: 2px; }
+    .lbl.bl { bottom: 2px; left: 2px; color: var(--accent); }
+    .lbl.br { bottom: 2px; right: 2px; }
+    .lbl.ok   { color: var(--ok); }
+    .lbl.fail { color: var(--fail); }
+
+    /* legend */
+    #legend {
+      position: fixed; bottom: 12px; left: 12px;
+      display: flex; gap: 14px;
+      font: 600 11px/1 'JetBrains Mono', monospace;
+      color: var(--dim);
+      z-index: 100;
+      background: rgba(11,11,13,0.7);
+      padding: 8px 12px;
+      border-radius: 4px;
+      backdrop-filter: blur(4px);
+    }
+    #legend .swatch {
+      display: inline-block; width: 10px; height: 10px;
+      margin-right: 6px; vertical-align: middle; border-radius: 1px;
+    }
+    .sw-act     { background: var(--act); }
+    .sw-smolvla { background: var(--smolvla); }
+    .sw-pi05    { background: var(--pi05); }
+
+    /* Filter bars — MODEL bottom-left, TASK bottom-right */
+    .filters {
+      position: fixed; bottom: 16px; z-index: 110;
+      display: flex; gap: 8px;
+      font: 600 11px/1.2 'JetBrains Mono', monospace; letter-spacing: 0.06em;
+    }
+    .filters.left  { left: 16px; }
+    .filters.right { right: 16px; }
+    .filter-row {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      padding: 6px 8px;
+      background: rgba(20,20,24,0.7);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      backdrop-filter: blur(8px);
+    }
+    .filter-row .lbl-sm {
+      align-self: center; color: var(--dim);
+      padding: 0 4px 0 2px; letter-spacing: 0.12em;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 11px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.4); color: var(--fg);
+      cursor: pointer; user-select: none;
+      transition: background 100ms ease, border-color 100ms ease, opacity 100ms ease;
+    }
+    .chip:hover { background: rgba(40,40,46,0.7); }
+    .chip[data-on="0"] { opacity: 0.42; }
+    .chip .sw {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    }
+    .chip.act .sw     { background: var(--act); }
+    .chip.smolvla .sw { background: var(--smolvla); }
+    .chip.pi05 .sw    { background: var(--pi05); }
+    .chip.task .sw    { background: var(--fg); }
+    #empty-msg {
+      position: fixed; inset: 0; display: none;
+      align-items: center; justify-content: center;
+      color: var(--dim); font: 600 14px/1.2 'JetBrains Mono', monospace;
+      letter-spacing: 0.06em; pointer-events: none;
+    }
+    #empty-msg.on { display: flex; }
+  </style>
+</head>
+<body>
+  <div id="title">EVAL<span class="accent">_</span>GALLERY</div>
+  <div id="status">loading…</div>
+  <main id="wall"></main>
+  <div class="filters left" id="filter-arch">
+    <div class="filter-row">
+      <span class="lbl-sm">MODEL</span>
+      <button class="chip act"     type="button" data-arch="ACT"     data-on="1"><span class="sw"></span>ACT</button>
+      <button class="chip smolvla" type="button" data-arch="SmolVLA" data-on="1"><span class="sw"></span>SmolVLA</button>
+      <button class="chip pi05"    type="button" data-arch="Pi05"    data-on="1"><span class="sw"></span>Pi0.5</button>
+    </div>
+  </div>
+  <div class="filters right" id="filter-task">
+    <div class="filter-row">
+      <span class="lbl-sm">TASK</span>
+      <button class="chip task" type="button" data-task="ST1" data-on="1"><span class="sw"></span>ST1</button>
+      <button class="chip task" type="button" data-task="ST2" data-on="1"><span class="sw"></span>ST2</button>
+      <button class="chip task" type="button" data-task="ST3" data-on="1"><span class="sw"></span>ST3</button>
+      <button class="chip task" type="button" data-task="ST4" data-on="1"><span class="sw"></span>ST4</button>
+    </div>
+  </div>
+  <div id="empty-msg">No rollouts match the current filters.</div>
+
+  <script src="data.js"></script>
+  <script>
+    const HIGHLIGHT_COUNT = 3;
+    const MIN_HIGHLIGHT_MS = 5000;     // floor for short clips
+    const MAX_HIGHLIGHT_MS = 30000;    // safety cap
+    const FALLBACK_HIGHLIGHT_MS = 6000;
+    // Tile sizing is iframe-relative: target roughly TARGET_COLS columns, with
+    // a min/max safety band so very tall/short iframes still look reasonable.
+    const TARGET_COLS = 6;
+    const TILE_ASPECT = 16 / 9;
+    const MIN_COLS = 3;
+    const MAX_COLS = 10;
+    const STATUS = document.getElementById('status');
+    const WALL = document.getElementById('wall');
+
+    function pickGridForViewport() {
+      // Iframe-relative sizing: aim for TARGET_COLS, scale rows so tiles stay 16:9.
+      const W = window.innerWidth, H = window.innerHeight;
+      // Pick cols by trying TARGET_COLS first, then clamp so resulting tile fits height.
+      let cols = TARGET_COLS;
+      let tileW = W / cols;
+      let tileH = tileW / TILE_ASPECT;
+      let rows = Math.max(1, Math.floor(H / tileH));
+      // If too few rows (very wide & short iframe), grow cols.
+      while (rows < 2 && cols < MAX_COLS) {
+        cols++;
+        tileW = W / cols; tileH = tileW / TILE_ASPECT;
+        rows = Math.max(1, Math.floor(H / tileH));
+      }
+      // If too few cols for a usable grid (very narrow), shrink cols.
+      while (cols > MIN_COLS && tileW < 120) {
+        cols--;
+        tileW = W / cols; tileH = tileW / TILE_ASPECT;
+        rows = Math.max(1, Math.floor(H / tileH));
+      }
+      cols = Math.max(MIN_COLS, Math.min(MAX_COLS, cols));
+      rows = Math.max(1, rows);
+      return { cols, rows, capacity: cols * rows };
+    }
+
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    let FULL_DATA = null;
+    let CURRENT_GRID = { cols: 0, rows: 0, capacity: 0 };
+    let ACTIVE_SLOTS = null;  // current rotation slots — cleared on re-render
+    let RENDER_GEN = 0;       // bumped on every renderWall — stale promises check this
+    let RENDER_PENDING = false;  // debounce coalescing for rapid filter clicks
+    const FILTERS = {
+      arch: new Set(['ACT', 'SmolVLA', 'Pi05']),
+      task: new Set(['ST1', 'ST2', 'ST3', 'ST4']),
+    };
+    function applyFilters(items) {
+      return items.filter(d => FILTERS.arch.has(d.policy) && FILTERS.task.has(d.subtask));
+    }
+
+    async function main() {
+      let data;
+      if (Array.isArray(window.GALLERY_DATA)) {
+        data = window.GALLERY_DATA.slice();
+      } else {
+        try {
+          const r = await fetch('data.json', { cache: 'no-store' });
+          data = await r.json();
+        } catch (e) {
+          STATUS.textContent = 'failed to load data.json — run build_gallery.py first';
+          return;
+        }
+      }
+      if (!data.length) {
+        STATUS.textContent = 'data.json is empty';
+        return;
+      }
+      shuffle(data);
+      FULL_DATA = data;
+      renderWall();
+      setupOnce();
+    }
+
+    function requestRender() {
+      // Coalesce rapid renderWall() calls so a fast burst of toggles only
+      // triggers one re-render once the burst settles.
+      if (RENDER_PENDING) return;
+      RENDER_PENDING = true;
+      setTimeout(() => { RENDER_PENDING = false; renderWall(); }, 60);
+    }
+
+    function teardownCurrentRender() {
+      // Cancel pending rotation timers
+      if (ACTIVE_SLOTS) {
+        for (const s of ACTIVE_SLOTS) { if (s.timer) { clearTimeout(s.timer); s.timer = null; } }
+      }
+      // Aggressively release video resources before nuking the DOM.
+      // Without this, Chromium may keep decoders attached to detached <video>
+      // elements; rapid filter toggles then exhaust the decoder pool and
+      // crash the renderer (SIGILL).
+      const vids = WALL.querySelectorAll('video');
+      vids.forEach(v => {
+        try { v.pause(); } catch (e) {}
+        try { v.removeAttribute('src'); } catch (e) {}
+        try { v.load(); } catch (e) {}
+      });
+    }
+
+    function renderWall() {
+      // Wipe and re-render — used on initial load AND on filter / viewport changes.
+      RENDER_GEN++;
+      const myGen = RENDER_GEN;
+      const gridState = pickGridForViewport();
+      const cols = gridState.cols, rows = gridState.rows;
+      const filtered = applyFilters(FULL_DATA);
+      const data = filtered.slice(0, gridState.capacity);
+      CURRENT_GRID = gridState;
+      const emptyEl = document.getElementById('empty-msg');
+      if (emptyEl) emptyEl.classList.toggle('on', filtered.length === 0);
+      teardownCurrentRender();
+      WALL.innerHTML = '';
+      WALL.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      WALL.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+      const tiles = [];
+      const byPolicy = { ACT: [], SmolVLA: [], Pi05: [] };
+
+      for (let i = 0; i < data.length; i++) {
+        const d = data[i];
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.dataset.policy = d.policy;
+        tile.dataset.id = d.id;
+        tile.dataset.row = String(Math.floor(i / cols));
+        tile.dataset.col = String(i % cols);
+
+        const img = document.createElement('img');
+        img.className = 'poster';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.src = d.poster;
+        img.alt = '';
+
+        // lo-res background video — always plays, grayscale via parent filter
+        const bg = document.createElement('video');
+        bg.className = 'bg';
+        bg.muted = true;
+        bg.loop = true;
+        bg.playsInline = true;
+        bg.preload = 'auto';
+        bg.src = d.clip_lo || d.clip;
+
+        // hi-res foreground video — only loaded/played when this tile is hot
+        const vid = document.createElement('video');
+        vid.className = 'fg';
+        vid.muted = true;
+        vid.loop = true;
+        vid.playsInline = true;
+        vid.preload = 'none';
+        vid.dataset.src = d.clip;
+
+        const tl = document.createElement('div'); tl.className = 'lbl tl'; tl.textContent = d.subtask || '';
+        const tlSub = document.createElement('div'); tlSub.className = 'lbl tl-sub'; tlSub.textContent = d.variant || '';
+        const tr = document.createElement('div'); tr.className = 'lbl tr ' + (d.success ? 'ok' : 'fail');
+        tr.textContent = d.success ? 'SUCCESS' : 'FAILURE';
+        const bl = document.createElement('div'); bl.className = 'lbl bl'; bl.textContent = d.policy || '';
+
+        tile.appendChild(img);
+        tile.appendChild(bg);
+        tile.appendChild(vid);
+        tile.appendChild(tl); tile.appendChild(tlSub); tile.appendChild(tr); tile.appendChild(bl);
+
+        WALL.appendChild(tile);
+        tiles.push(tile);
+        if (byPolicy[d.policy]) byPolicy[d.policy].push(tile);
+      }
+
+      STATUS.textContent = `${data.length} rollouts · ${cols}×${rows} grid`;
+      // Hide status after 4s
+      setTimeout(() => { STATUS.style.opacity = '0'; STATUS.style.transition = 'opacity 800ms'; }, 4000);
+
+      function isInterior(t) {
+        // Skip outer-perimeter tiles — when scaled up they clip outside the viewport.
+        const r = +t.dataset.row, c = +t.dataset.col;
+        return r > 0 && r < rows - 1 && c > 0 && c < cols - 1;
+      }
+
+      function isFar(candidate, picks, minDist = 2) {
+        // No two highlights within `minDist` cells (Chebyshev distance) of each other.
+        const cr = +candidate.dataset.row, cc = +candidate.dataset.col;
+        for (const p of picks) {
+          const pr = +p.dataset.row, pc = +p.dataset.col;
+          if (Math.max(Math.abs(cr - pr), Math.abs(cc - pc)) < minDist) return false;
+        }
+        return true;
+      }
+
+      // Three independent slots. Each rotates when ITS OWN video completes,
+      // not when the longest of the three completes.
+      const slots = Array.from({ length: HIGHLIGHT_COUNT }, () => ({ tile: null, timer: null, gen: 0 }));
+      ACTIVE_SLOTS = slots;
+      const recentTiles = new Set();
+      const RECENT_MAX = 4 * HIGHLIGHT_COUNT;   // remember last ~4 picks per slot
+
+      function activeOtherTiles(slotIdx) {
+        return slots
+          .map((s, i) => i !== slotIdx ? s.tile : null)
+          .filter(Boolean);
+      }
+
+      function pickReplacement(slotIdx) {
+        const others = activeOtherTiles(slotIdx);
+        const otherSet = new Set(others);
+        const eligibleFrom = (pool) => pool.filter(t =>
+          !otherSet.has(t) &&
+          !recentTiles.has(t) &&
+          isInterior(t) &&
+          isFar(t, others)
+        );
+
+        // Prefer a policy not in the other slots
+        const otherPolicies = new Set(others.map(t => t.dataset.policy));
+        const allPolicies = shuffle(['ACT', 'SmolVLA', 'Pi05']);
+        const preferred = allPolicies.filter(p => !otherPolicies.has(p));
+        const fallback  = allPolicies.filter(p =>  otherPolicies.has(p));
+
+        for (const p of [...preferred, ...fallback]) {
+          const pool = eligibleFrom(byPolicy[p] || []);
+          if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+        }
+        // Drop filters progressively if we ran out of candidates
+        let pool = tiles.filter(t => !otherSet.has(t) && isInterior(t) && isFar(t, others));
+        if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+        pool = tiles.filter(t => !otherSet.has(t) && isInterior(t));
+        if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+        pool = tiles.filter(t => !otherSet.has(t));
+        return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+      }
+
+      function rememberRecent(tile) {
+        recentTiles.add(tile);
+        if (recentTiles.size > RECENT_MAX) {
+          // Drop oldest
+          const arr = Array.from(recentTiles);
+          recentTiles.clear();
+          for (const t of arr.slice(-RECENT_MAX)) recentTiles.add(t);
+        }
+      }
+
+      function deactivate(tile) {
+        if (!tile) return;
+        tile.classList.remove('hot');
+        const v = tile.querySelector('video.fg');
+        try { v.pause(); } catch (e) {}
+        v.removeAttribute('src');
+        v.load();
+      }
+
+      function activate(tile) {
+        const v = tile.querySelector('video.fg');
+        return new Promise((resolve) => {
+          let resolved = false;
+          const finish = () => {
+            if (resolved) return;
+            resolved = true;
+            // If this render generation has been superseded, the tile is gone:
+            // do not play, just resolve with null so the awaiting code bails.
+            if (RENDER_GEN !== myGen) { resolve(null); return; }
+            const dur = (Number.isFinite(v.duration) && v.duration > 0)
+              ? v.duration : null;
+            v.play().catch(() => {});
+            resolve(dur);
+          };
+          v.addEventListener('loadedmetadata', finish, { once: true });
+          v.addEventListener('error', finish, { once: true });
+          setTimeout(finish, 2000);
+          v.src = v.dataset.src;
+          v.load();
+          tile.classList.add('hot');
+        });
+      }
+
+      async function rotateSlot(slotIdx) {
+        // Bail immediately if a newer render has taken over.
+        if (RENDER_GEN !== myGen) return;
+        const slot = slots[slotIdx];
+        if (slot.timer) { clearTimeout(slot.timer); slot.timer = null; }
+        const old = slot.tile;
+        const next = pickReplacement(slotIdx);
+        const slotGen = ++slot.gen;
+        slot.tile = next;
+        if (old) { rememberRecent(old); deactivate(old); }
+        if (!next) return;
+
+        const dur = await activate(next);
+        // Drop if the slot was rotated again OR a newer render replaced us.
+        if (RENDER_GEN !== myGen) return;
+        if (slot.gen !== slotGen || slot.tile !== next) return;
+        let hold = (dur != null && dur > 0) ? dur * 1000 : FALLBACK_HIGHLIGHT_MS;
+        hold = Math.max(MIN_HIGHLIGHT_MS, Math.min(MAX_HIGHLIGHT_MS, hold));
+        slot.timer = setTimeout(() => rotateSlot(slotIdx), hold);
+      }
+
+      // Start every lo-res background video. Stagger plays slightly so the
+      // browser doesn't try to spin up 80 decoders on the same tick.
+      function startBackgrounds() {
+        const bgs = document.querySelectorAll('video.bg');
+        bgs.forEach((v, i) => {
+          setTimeout(() => {
+            if (RENDER_GEN !== myGen) return;  // a newer render replaced us
+            try {
+              if (Number.isFinite(v.duration) && v.duration > 0) {
+                v.currentTime = Math.random() * Math.min(2, v.duration * 0.5);
+              }
+              v.play().catch(() => {});
+            } catch (e) {}
+          }, i * 30);
+        });
+      }
+      startBackgrounds();
+
+      // Kick off all 3 slots independently. Stagger their starts slightly so
+      // they don't always rotate at the same instant.
+      for (let i = 0; i < HIGHLIGHT_COUNT; i++) {
+        setTimeout(() => { if (RENDER_GEN === myGen) rotateSlot(i); }, i * 350);
+      }
+
+    }  // end renderWall
+
+    function setupOnce() {
+      // Filter chips — toggle the matching set, then re-render the wall.
+      document.querySelectorAll('.filters .chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const on = chip.dataset.on === '1';
+          const next = on ? '0' : '1';
+          const arch = chip.dataset.arch, task = chip.dataset.task;
+          if (arch) {
+            if (on) FILTERS.arch.delete(arch); else FILTERS.arch.add(arch);
+          }
+          if (task) {
+            if (on) FILTERS.task.delete(task); else FILTERS.task.add(task);
+          }
+          chip.dataset.on = next;
+          requestRender();
+        });
+      });
+
+      // When embedded in deck.html as an iframe, forward arrow / space / pgUp/pgDn
+      // back to the parent so deck navigation continues to work.
+      if (window.parent && window.parent !== window) {
+        const NAV = new Set(['ArrowLeft','ArrowRight','PageUp','PageDown',' ','Spacebar','Home','End','Escape']);
+        window.addEventListener('keydown', (e) => {
+          if (NAV.has(e.key)) {
+            window.parent.postMessage({ type: 'gallery-nav-key', key: e.key }, '*');
+          }
+        });
+      }
+
+      // Re-render the wall on resize (also fires when entering/exiting fullscreen).
+      // Re-rendering — not just retemplating — is what packs more tiles into a
+      // larger viewport instead of stretching the existing ones.
+      let resizeTO;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTO);
+        resizeTO = setTimeout(() => {
+          const g = pickGridForViewport();
+          if (g.cols !== CURRENT_GRID.cols || g.rows !== CURRENT_GRID.rows) {
+            requestRender();
+          }
+        }, 200);
+      });
+
+    }
+    main();
+  </script>
+</body>
+</html>

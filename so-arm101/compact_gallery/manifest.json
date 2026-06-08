@@ -1,0 +1,110 @@
+[
+  {
+    "task": "ST1",
+    "model": "ACT",
+    "dataset": "D1+D3-Half",
+    "scene": "ST1-K-01",
+    "src": "submission/eval_gallery/clips_lo/block-st1-act-task1task3-50-all__ep00.mp4",
+    "clip": "compact_gallery/clips/st1_act.mp4",
+    "poster": "compact_gallery/posters/st1_act.jpg"
+  },
+  {
+    "task": "ST1",
+    "model": "Pi0.5",
+    "dataset": "D_Universal",
+    "scene": "ST1-K-01",
+    "src": "submission/eval_gallery/clips_lo/block-st1-pi05-universal-all__ep00.mp4",
+    "clip": "compact_gallery/clips/st1_pi05.mp4",
+    "poster": "compact_gallery/posters/st1_pi05.jpg"
+  },
+  {
+    "task": "ST1",
+    "model": "SmolVLA",
+    "dataset": "D1+D2-Half",
+    "scene": "ST1-K-01",
+    "src": "submission/eval_gallery/clips_lo/block-st1-smolvla-task1task2-50-all__ep00.mp4",
+    "clip": "compact_gallery/clips/st1_smolvla.mp4",
+    "poster": "compact_gallery/posters/st1_smolvla.jpg"
+  },
+  {
+    "task": "ST2",
+    "model": "ACT",
+    "dataset": "D1+D2-Half",
+    "scene": "ST2-K-01",
+    "src": "submission/eval_gallery/clips_lo/block-st2-act-task1task2-50-all__ep00.mp4",
+    "clip": "compact_gallery/clips/st2_act.mp4",
+    "poster": "compact_gallery/posters/st2_act.jpg"
+  },
+  {
+    "task": "ST2",
+    "model": "Pi0.5",
+    "dataset": "D_Universal",
+    "scene": "ST2-K-01",
+    "src": "submission/eval_gallery/clips_lo/block-st2-pi05-universal-all__ep00.mp4",
+    "clip": "compact_gallery/clips/st2_pi05.mp4",
+    "poster": "compact_gallery/posters/st2_pi05.jpg"
+  },
+  {
+    "task": "ST2",
+    "model": "SmolVLA",
+    "dataset": "D_Universal",
+    "scene": "ST2-K-01",
+    "src": "submission/eval_gallery/clips_lo/block-st2-smolvla-universal-all__ep00.mp4",
+    "clip": "compact_gallery/clips/st2_smolvla.mp4",
+    "poster": "compact_gallery/posters/st2_smolvla.jpg"
+  },
+  {
+    "task": "ST3",
+    "model": "ACT",
+    "dataset": "D_Universal",
+    "scene": "ST3-K-01",
+    "src": "vlm_pipeline/datasets_split/block-st3-act-universal-all/vstack_small/episode_00_ST3-K-01_success.mp4",
+    "clip": "compact_gallery/clips/st3_act.mp4",
+    "poster": "compact_gallery/posters/st3_act.jpg"
+  },
+  {
+    "task": "ST3",
+    "model": "Pi0.5",
+    "dataset": "D1+D3-Half",
+    "scene": "ST3-K-04",
+    "src": "vlm_pipeline/datasets_split/block-st3-pi05-task1task3-50-all-20260505_023926/vstack_small/episode_03_ST3-K-04_success.mp4",
+    "clip": "compact_gallery/clips/st3_pi05.mp4",
+    "poster": "compact_gallery/posters/st3_pi05.jpg"
+  },
+  {
+    "task": "ST3",
+    "model": "SmolVLA",
+    "dataset": "D1+D3-Half",
+    "scene": "ST3-K-01",
+    "src": "vlm_pipeline/datasets_split/block-st3-smolvla-task1task3-50-all/vstack_small/episode_00_ST3-K-01_success.mp4",
+    "clip": "compact_gallery/clips/st3_smolvla.mp4",
+    "poster": "compact_gallery/posters/st3_smolvla.jpg"
+  },
+  {
+    "task": "ST4",
+    "model": "ACT",
+    "dataset": "D2+D3",
+    "scene": "ST4-U-01",
+    "src": "vlm_pipeline/datasets_split/block-st4-act-task2task3-all/vstack_small/episode_00_ST4-U-01_success.mp4",
+    "clip": "compact_gallery/clips/st4_act.mp4",
+    "poster": "compact_gallery/posters/st4_act.jpg"
+  },
+  {
+    "task": "ST4",
+    "model": "Pi0.5",
+    "dataset": "D_Universal",
+    "scene": "ST4-U-01",
+    "src": "vlm_pipeline/datasets_split/block-st4-pi05-universal-all-20260505_123604/vstack_small/episode_00_ST4-U-01_success.mp4",
+    "clip": "compact_gallery/clips/st4_pi05.mp4",
+    "poster": "compact_gallery/posters/st4_pi05.jpg"
+  },
+  {
+    "task": "ST4",
+    "model": "SmolVLA",
+    "dataset": "D_Universal",
+    "scene": "ST4-U-04",
+    "src": "vlm_pipeline/datasets_split/block-st4-smolvla-universal-all/vstack_small/episode_03_ST4-U-04_success.mp4",
+    "clip": "compact_gallery/clips/st4_smolvla.mp4",
+    "poster": "compact_gallery/posters/st4_smolvla.jpg"
+  }
+]
