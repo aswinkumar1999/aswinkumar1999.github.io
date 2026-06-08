@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SO-ARM101 — eval gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0b0d;
+      --fg: #e8e8ea;
+      --dim: #5a5a60;
+      --act: #2E5EAA;
+      --smolvla: #3D8B5C;
+      --pi05: #D97706;
+      --ok: #4ade80;
+      --fail: #f87171;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: var(--bg); color: var(--fg);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+    #status {
+      position: fixed; top: 56px; left: 50%; transform: translateX(-50%);
+      font: 600 11px/1.2 'JetBrains Mono', monospace;
+      color: var(--dim); letter-spacing: 0.05em;
+      z-index: 100; pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+    #title {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+      font: 700 26px/1 'JetBrains Mono', monospace;
+      letter-spacing: 0.18em;
+      color: var(--fg);
+      z-index: 100; pointer-events: none;
+      text-shadow: 0 2px 14px rgba(0,0,0,0.95), 0 0 30px rgba(0,0,0,0.85);
+      mix-blend-mode: normal;
+    }
+    #title .accent { color: var(--pi05); }
+
+    /* Thank-you overlay: fades in immediately, holds 6s, fades out 1.5s */
+    #thanks {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 200; pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%);
+    }
+    #thanks .big {
+      font: 800 96px/1 'JetBrains Mono', monospace;
+      letter-spacing: 0.16em;
+      color: var(--fg);
+      text-shadow: 0 4px 30px rgba(0,0,0,0.95), 0 0 60px rgba(0,0,0,0.7);
+      margin-bottom: 18px;
+    }
+    #thanks .sub {
+      font: 600 24px/1 'JetBrains Mono', monospace;
+      letter-spacing: 0.22em;
+      color: var(--pi05);
+      text-shadow: 0 2px 18px rgba(0,0,0,0.95);
+      margin-bottom: 38px;
+    }
+    #thanks .credits {
+      font: 700 22px/1.4 'Inter', sans-serif;
+      letter-spacing: 0.05em;
+      color: var(--fail);
+      text-shadow: 0 2px 18px rgba(0,0,0,0.95), 0 0 26px rgba(0,0,0,0.85);
+      max-width: 760px; text-align: center;
+    }
+    #thanks .accent { color: var(--pi05); }
+    #wall {
+      display: grid; gap: 2px;
+      width: 100vw; height: 100vh;
+      padding: 2px;
+      background: #000;
+    }
+    .tile {
+      position: relative; overflow: hidden; background: #000;
+      aspect-ratio: 16/9;
+      filter: grayscale(1) brightness(0.5) contrast(0.92);
+      transition: filter 600ms ease, transform 600ms ease, box-shadow 600ms ease;
+      will-change: filter, transform;
+    }
+    .tile video,
+    .tile .poster {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .tile .poster { z-index: 1; }
+    /* lo-res ambient layer: always playing in background */
+    .tile video.bg { z-index: 2; }
+    /* hi-res spotlight layer: shows only when .hot */
+    .tile video.fg { z-index: 3; opacity: 0; transition: opacity 350ms ease; }
+    .tile.hot video.fg { opacity: 1; }
+
+    .tile.hot {
+      filter: none;
+      transform: scale(1.85);
+      z-index: 30;
+      box-shadow: 0 0 0 2px var(--accent), 0 18px 60px rgba(0,0,0,0.85);
+    }
+    .tile[data-policy="ACT"]     { --accent: var(--act); }
+    .tile[data-policy="SmolVLA"] { --accent: var(--smolvla); }
+    .tile[data-policy="Pi05"]    { --accent: var(--pi05); }
+
+    .lbl {
+      position: absolute; z-index: 5;
+      font: 600 12px/1 'JetBrains Mono', monospace;
+      color: var(--fg);
+      padding: 2px 4px;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      transition: opacity 350ms ease;
+      pointer-events: none;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      max-width: calc(100% - 4px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tile.hot .lbl { opacity: 1; }
+    .lbl.tl { top: 2px; left: 2px; }
+    /* variant: sits right below the top-left subtask label, much smaller */
+    .lbl.tl-sub { top: 20px; left: 2px;
+                  font: 600 7px/1 'JetBrains Mono', monospace;
+                  letter-spacing: 0.03em;
+                  padding: 1px 3px;
+                  color: var(--accent);
+                  background: rgba(0,0,0,0.50); }
+    .lbl.tr { top: 2px; right: 2px; }
+    .lbl.bl { bottom: 2px; left: 2px; color: var(--accent); }
+    .lbl.br { bottom: 2px; right: 2px; }
+    .lbl.ok   { color: var(--ok); }
+    .lbl.fail { color: var(--fail); }
+
+    /* legend */
+    #legend {
+      position: fixed; bottom: 12px; left: 12px;
+      display: flex; gap: 14px;
+      font: 600 11px/1 'JetBrains Mono', monospace;
+      color: var(--dim);
+      z-index: 100;
+      background: rgba(11,11,13,0.7);
+      padding: 8px 12px;
+      border-radius: 4px;
+      backdrop-filter: blur(4px);
+    }
+    #legend .swatch {
+      display: inline-block; width: 10px; height: 10px;
+      margin-right: 6px; vertical-align: middle; border-radius: 1px;
+    }
+    .sw-act     { background: var(--act); }
+    .sw-smolvla { background: var(--smolvla); }
+    .sw-pi05    { background: var(--pi05); }
+  </style>
+</head>
+<body>
+  <div id="title">EVAL<span class="accent">_</span>GALLERY</div>
+  <div id="status">loading…</div>
+  <main id="wall"></main>
+  <div id="thanks">
+    <div class="big">THANK YOU</div>
+    <div class="sub">questions<span class="accent">?</span></div>
+    <div class="credits">Thanks to Prof. Hagenow (CS839) and the LeRobot community.</div>
+  </div>
+  <div id="legend">
+    <span><span class="swatch sw-act"></span>ACT</span>
+    <span><span class="swatch sw-smolvla"></span>SmolVLA</span>
+    <span><span class="swatch sw-pi05"></span>Pi05</span>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    const HIGHLIGHT_COUNT = 3;
+    const MIN_HIGHLIGHT_MS = 5000;     // floor for short clips
+    const MAX_HIGHLIGHT_MS = 30000;    // safety cap
+    const FALLBACK_HIGHLIGHT_MS = 6000;
+    const TILE_MIN_W = 192;            // ~10 columns at 1920 wide
+    const TILE_MIN_H = 108;            // 16:9
+    const STATUS = document.getElementById('status');
+    const WALL = document.getElementById('wall');
+
+    function pickGridForViewport() {
+      // How many cols/rows fit at the desired tile size
+      const W = window.innerWidth, H = window.innerHeight;
+      const cols = Math.max(1, Math.floor(W / TILE_MIN_W));
+      const rows = Math.max(1, Math.floor(H / TILE_MIN_H));
+      return { cols, rows, capacity: cols * rows };
+    }
+
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    async function main() {
+      let data;
+      if (Array.isArray(window.GALLERY_DATA)) {
+        data = window.GALLERY_DATA;
+      } else {
+        try {
+          const r = await fetch('data.json', { cache: 'no-store' });
+          data = await r.json();
+        } catch (e) {
+          STATUS.textContent = 'failed to load data.json — run build_gallery.py first';
+          return;
+        }
+      }
+      if (!data.length) {
+        STATUS.textContent = 'data.json is empty';
+        return;
+      }
+      shuffle(data);
+
+      let gridState = pickGridForViewport();
+      let cols = gridState.cols, rows = gridState.rows;
+      // Render only as many tiles as fit; sample randomly so each load is varied
+      data = data.slice(0, gridState.capacity);
+      WALL.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      WALL.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+      const tiles = [];
+      const byPolicy = { ACT: [], SmolVLA: [], Pi05: [] };
+
+      for (let i = 0; i < data.length; i++) {
+        const d = data[i];
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.dataset.policy = d.policy;
+        tile.dataset.id = d.id;
+        tile.dataset.row = String(Math.floor(i / cols));
+        tile.dataset.col = String(i % cols);
+
+        const img = document.createElement('img');
+        img.className = 'poster';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.src = d.poster;
+        img.alt = '';
+
+        // lo-res background video — always plays, grayscale via parent filter
+        const bg = document.createElement('video');
+        bg.className = 'bg';
+        bg.muted = true;
+        bg.loop = true;
+        bg.playsInline = true;
+        bg.preload = 'auto';
+        bg.src = d.clip_lo || d.clip;
+
+        // hi-res foreground video — only loaded/played when this tile is hot
+        const vid = document.createElement('video');
+        vid.className = 'fg';
+        vid.muted = true;
+        vid.loop = true;
+        vid.playsInline = true;
+        vid.preload = 'none';
+        vid.dataset.src = d.clip;
+
+        const tl = document.createElement('div'); tl.className = 'lbl tl'; tl.textContent = d.subtask || '';
+        const tlSub = document.createElement('div'); tlSub.className = 'lbl tl-sub'; tlSub.textContent = d.variant || '';
+        const tr = document.createElement('div'); tr.className = 'lbl tr ' + (d.success ? 'ok' : 'fail');
+        tr.textContent = d.success ? 'SUCCESS' : 'FAILURE';
+        const bl = document.createElement('div'); bl.className = 'lbl bl'; bl.textContent = d.policy || '';
+
+        tile.appendChild(img);
+        tile.appendChild(bg);
+        tile.appendChild(vid);
+        tile.appendChild(tl); tile.appendChild(tlSub); tile.appendChild(tr); tile.appendChild(bl);
+
+        WALL.appendChild(tile);
+        tiles.push(tile);
+        if (byPolicy[d.policy]) byPolicy[d.policy].push(tile);
+      }
+
+      STATUS.textContent = `${data.length} rollouts · ${cols}×${rows} grid`;
+      // Hide status after 4s
+      setTimeout(() => { STATUS.style.opacity = '0'; STATUS.style.transition = 'opacity 800ms'; }, 4000);
+
+      function isInterior(t) {
+        // Skip outer-perimeter tiles — when scaled up they clip outside the viewport.
+        const r = +t.dataset.row, c = +t.dataset.col;
+        return r > 0 && r < rows - 1 && c > 0 && c < cols - 1;
+      }
+
+      function isFar(candidate, picks, minDist = 2) {
+        // No two highlights within `minDist` cells (Chebyshev distance) of each other.
+        const cr = +candidate.dataset.row, cc = +candidate.dataset.col;
+        for (const p of picks) {
+          const pr = +p.dataset.row, pc = +p.dataset.col;
+          if (Math.max(Math.abs(cr - pr), Math.abs(cc - pc)) < minDist) return false;
+        }
+        return true;
+      }
+
+      // Three independent slots. Each rotates when ITS OWN video completes,
+      // not when the longest of the three completes.
+      const slots = Array.from({ length: HIGHLIGHT_COUNT }, () => ({ tile: null, timer: null, gen: 0 }));
+      const recentTiles = new Set();
+      const RECENT_MAX = 4 * HIGHLIGHT_COUNT;   // remember last ~4 picks per slot
+
+      function activeOtherTiles(slotIdx) {
+        return slots
+          .map((s, i) => i !== slotIdx ? s.tile : null)
+          .filter(Boolean);
+      }
+
+      function pickReplacement(slotIdx) {
+        const others = activeOtherTiles(slotIdx);
+        const otherSet = new Set(others);
+        const eligibleFrom = (pool) => pool.filter(t =>
+          !otherSet.has(t) &&
+          !recentTiles.has(t) &&
+          isInterior(t) &&
+          isFar(t, others)
+        );
+
+        // Prefer a policy not in the other slots
+        const otherPolicies = new Set(others.map(t => t.dataset.policy));
+        const allPolicies = shuffle(['ACT', 'SmolVLA', 'Pi05']);
+        const preferred = allPolicies.filter(p => !otherPolicies.has(p));
+        const fallback  = allPolicies.filter(p =>  otherPolicies.has(p));
+
+        for (const p of [...preferred, ...fallback]) {
+          const pool = eligibleFrom(byPolicy[p] || []);
+          if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+        }
+        // Drop filters progressively if we ran out of candidates
+        let pool = tiles.filter(t => !otherSet.has(t) && isInterior(t) && isFar(t, others));
+        if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+        pool = tiles.filter(t => !otherSet.has(t) && isInterior(t));
+        if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+        pool = tiles.filter(t => !otherSet.has(t));
+        return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+      }
+
+      function rememberRecent(tile) {
+        recentTiles.add(tile);
+        if (recentTiles.size > RECENT_MAX) {
+          // Drop oldest
+          const arr = Array.from(recentTiles);
+          recentTiles.clear();
+          for (const t of arr.slice(-RECENT_MAX)) recentTiles.add(t);
+        }
+      }
+
+      function deactivate(tile) {
+        if (!tile) return;
+        tile.classList.remove('hot');
+        const v = tile.querySelector('video.fg');
+        try { v.pause(); } catch (e) {}
+        v.removeAttribute('src');
+        v.load();
+      }
+
+      function activate(tile) {
+        const v = tile.querySelector('video.fg');
+        return new Promise((resolve) => {
+          let resolved = false;
+          const finish = () => {
+            if (resolved) return;
+            resolved = true;
+            const dur = (Number.isFinite(v.duration) && v.duration > 0)
+              ? v.duration : null;
+            v.play().catch(() => {});
+            resolve(dur);
+          };
+          v.addEventListener('loadedmetadata', finish, { once: true });
+          v.addEventListener('error', finish, { once: true });
+          setTimeout(finish, 2000);
+          v.src = v.dataset.src;
+          v.load();
+          tile.classList.add('hot');
+        });
+      }
+
+      async function rotateSlot(slotIdx) {
+        const slot = slots[slotIdx];
+        if (slot.timer) { clearTimeout(slot.timer); slot.timer = null; }
+        const old = slot.tile;
+        const next = pickReplacement(slotIdx);
+        const myGen = ++slot.gen;
+        slot.tile = next;
+        if (old) { rememberRecent(old); deactivate(old); }
+        if (!next) return;
+
+        const dur = await activate(next);
+        // If this slot was rotated again before activate resolved, drop this scheduling
+        if (slot.gen !== myGen || slot.tile !== next) return;
+        let hold = (dur != null && dur > 0) ? dur * 1000 : FALLBACK_HIGHLIGHT_MS;
+        hold = Math.max(MIN_HIGHLIGHT_MS, Math.min(MAX_HIGHLIGHT_MS, hold));
+        slot.timer = setTimeout(() => rotateSlot(slotIdx), hold);
+      }
+
+      // Start every lo-res background video. Stagger plays slightly so the
+      // browser doesn't try to spin up 80 decoders on the same tick.
+      function startBackgrounds() {
+        const bgs = document.querySelectorAll('video.bg');
+        bgs.forEach((v, i) => {
+          setTimeout(() => {
+            try {
+              if (Number.isFinite(v.duration) && v.duration > 0) {
+                v.currentTime = Math.random() * Math.min(2, v.duration * 0.5);
+              }
+              v.play().catch(() => {});
+            } catch (e) {}
+          }, i * 30);
+        });
+      }
+      startBackgrounds();
+
+      // Kick off all 3 slots independently. Stagger their starts slightly so
+      // they don't always rotate at the same instant.
+      for (let i = 0; i < HIGHLIGHT_COUNT; i++) {
+        setTimeout(() => rotateSlot(i), i * 350);
+      }
+
+      // When embedded in deck.html as an iframe, forward arrow / space / pgUp/pgDn
+      // back to the parent so deck navigation continues to work.
+      if (window.parent && window.parent !== window) {
+        const NAV = new Set(['ArrowLeft','ArrowRight','PageUp','PageDown',' ','Spacebar','Home','End','Escape']);
+        window.addEventListener('keydown', (e) => {
+          if (NAV.has(e.key)) {
+            window.parent.postMessage({ type: 'gallery-nav-key', key: e.key }, '*');
+          }
+        });
+      }
+
+      // "THANK YOU / questions?" overlay sequence:
+      // fade-in 0.4s → hold 6s → fade-out 1.5s → leave it invisible.
+      const thanks = document.getElementById('thanks');
+      requestAnimationFrame(() => {
+        thanks.style.transition = 'opacity 0.4s ease-out';
+        thanks.style.opacity = '1';
+      });
+      setTimeout(() => {
+        thanks.style.transition = 'opacity 1.5s ease-in';
+        thanks.style.opacity = '0';
+      }, 6400);   // 0.4s in + 6s hold
+      // Hide from layout entirely after the fade so it never re-appears
+      setTimeout(() => { thanks.style.display = 'none'; }, 6400 + 1500 + 100);
+
+      // Re-pack grid on resize (just re-flow; tiles stay)
+      let resizeTO;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTO);
+        resizeTO = setTimeout(() => {
+          const g = pickGridForViewport();
+          WALL.style.gridTemplateColumns = `repeat(${g.cols}, 1fr)`;
+          WALL.style.gridTemplateRows = `repeat(${g.rows}, 1fr)`;
+        }, 200);
+      });
+    }
+    main();
+  </script>
+</body>
+</html>
